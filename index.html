@@ -3,33 +3,550 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>會員抽獎活動</title>
-  <link rel="stylesheet" href="style.css" />
+  <title></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      position: relative;
+    }
+    h1 {
+      margin-bottom: 0;
+    }
+    #deadlineDisplay {
+      font-size: 16px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    #countdownTimer {
+      font-size: 18px;
+      color: #c00;
+      margin-bottom: 15px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .prize {
+      padding: 10px;
+      text-align: center;
+      background-color: #f0f0f0;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+    .highlight {
+      background-color: #ffe066 !important;
+    }
+    .controls {
+      display: none;
+    }
+    .controls.show {
+      display: block;
+    }
+    input {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    button {
+      padding: 12px;
+      width: 100%;
+      font-size: 18px;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+      white-space: pre-wrap;
+      font-size: 20px;
+    }
+    .message .prize-text {
+      font-size: 40px;
+      display: block;
+      margin-top: 20px;
+    }
+    .loading {
+      text-align: center;
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 28px;
+    }
+    .countdown-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .countdown-text {
+      font-size: 360px;
+      color: white;
+      font-weight: bold;
+      animation: pop 0.4s ease-in-out;
+    }
+    .start-text {
+      font-size: 360px;
+      color: #fff;
+      font-weight: bold;
+      margin-top: 20px;
+      animation: fadein 1s ease-in-out;
+    }
+
+//活動到期日字體
+    #deadlineDisplay {
+  font-weight: bold;  /* 加粗字體 */
+  font-size: 18px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  color: #c00;
+  //color: #555;
+}
+
+  .prize-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9998;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-size: 48px;
+      font-weight: bold;
+      text-align: center;
+      white-space: pre-wrap;
+      animation: fadeout 5s ease-out forwards;
+      padding: 40px;
+      border: 10px solid transparent;
+      border-radius: 30px;
+      box-sizing: border-box;
+      animation-name: fadeout, glow;
+      animation-duration: 4s, 2s;
+      animation-iteration-count: 1, infinite;
+      animation-timing-function: ease-out, linear;
+    }
+
+#drawBtn {
+  padding: 15px 40px 15px 40px;  /* 上下內邊距減小，讓字更靠上 */
+  font-size: 24px;  /* 字體大小 */
+  height: 60px;  /* 按鈕高度 */
+  background-color: #f0ad4e;  /* 背景顏色 */
+  color: white;  /* 字體顏色 */
+  border-radius: 8px;  /* 圓角 */
+  border: none;  /* 去掉邊框 */
+  cursor: pointer;  /* 鼠標指針 */
+  transition: background-color 0.3s;  /* 滑過效果 */
+  line-height: 30px;  /* 讓文字往上走一點 */
+  text-align: center;  /* 水平居中 */
+}
+
+#drawBtn:hover {
+  background-color: #d9534f;  /* 滑過顏色變化 */
+}
+
+
+    /*原本的淡出
+    @keyframes fadeout {
+      0% { opacity: 1; }
+      100% { opacity: 0; display: none; }
+    }
+    */
+
+
+    @keyframes fadeout {
+      0% { opacity: 1; }
+      100% { opacity: 1; display: none; }
+    }
+
+    @keyframes glow {
+      0% {
+        border-color: #ff0000;
+        box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+      }
+      50% {
+        border-color: #ffff00;
+        box-shadow: 0 0 30px #ffff00, 0 0 60px #ffff00;
+      }
+      100% {
+        border-color: #ff0000;
+        box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+      }
+    }
+    .prize-text {
+      animation: prizePop 0.8s ease-in-out;
+      font-size: 120px;
+    }
+    @keyframes prizePop {
+      0% { transform: scale(0.2); opacity: 0; }
+      60% { transform: scale(1.4); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+//倒數時間字體
+    #countdownTimer {
+  font-size: 18px;
+  color: #c00;
+  margin-bottom: 15px;
+  font-weight: bold;  /* 加粗字體 */
+}
+
+
+
+#result table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 16px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#result th, #result td {
+  border: 1px solid #ccc;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+#result th {
+  background-color: #ffc107;  /* 金黃色 */
+  color: #333;
+  font-weight: bold;
+}
+
+#result tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#result tr:hover {
+  background-color: #f1f1f1;
+}
+
+
+
+
+  </style>
 </head>
 <body>
+
+<div id="drawSection">
   <h1 id="mainTitle">載入中...</h1>
-  <div id="deadlineDisplay">活動到期日載入中...</div>
+  <div>　</div>
+  <div id="deadlineDisplay" style="font-weight: bold;">活動到期日載入中...</div>
   <div id="countdownTimer">剩下 -- 分 -- 秒</div>
+  <div>　</div>
+  <div style="color: blue; font-size: 20px;">📩本期抽獎獎項📩<br></div>
+  <div>　</div>
+  <div class="grid" id="prizeContainer"></div>
+  <div>　</div>
+
+<div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
+<div style="color: blue;">👉 獎項將於您下一次購買的包裹中一併寄出。<br><br></div>
+<div style="color: red;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
+<br><br>
+
 
   <div class="controls" id="controls">
     <input type="text" id="phone" placeholder="輸入您的手機號碼才能抽獎，室話不行喔!" />
     <button id="drawBtn" onclick="startDraw()">開始抽獎</button>
   </div>
 
-  <div class="grid" id="prizeContainer"></div>
   <div class="message" id="message"></div>
   <div class="loading" id="loading">載入中…</div>
 
-  <audio id="startSound" src="sounds/start.wav" preload="auto"></audio>
-  <audio id="winSound" src="sounds/win.wav" preload="auto"></audio>
-  <audio id="lightSound" src="sounds/light.wav" preload="auto"></audio>
+  <div id="countdownOverlay" class="countdown-overlay">
+    <div id="countdown" class="countdown-text"></div>
+    <div id="startText" class="start-text" style="display:none;">開始抽獎</div>
+  </div>
+  <div>　</div>
+  <button id="drawBtn" onclick="showQuery()">查詢中獎紀錄</button>
+
+</div>
+
+
+  <audio id="startSound" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
+  <audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+
+
+
+
+<div id="querySection" style="display: none;">
+  <h2>查詢中獎紀錄</h2>
+  <input type="text" id="queryPhone" placeholder="請輸入手機號碼">
+<div>　</div>
+<button id="drawBtn" onclick="search()">查詢中獎紀錄</button>
+<div>　</div>
+
+<div id="result"></div>
+<div>　</div>
+<div>　</div>
+<button id="drawBtn" onclick="showDraw()">返回抽獎</button>
+</div>
+
+
+
+
 
   <script>
-    const API_PROXY_URL = '/api/gas';
-    window.onload = () => {
-      console.log("抽獎頁面已載入，待串接後端。");
-    }
-  </script>
+    let prizes = [];
+    let drawing = false;
+    let highlightIndex = -1;
+    let deadline = null;
+    let countdownInterval = null;
 
+    window.onload = () => {
+      fetchTitle();
+      fetchDeadline();
+      fetchPrizes();
+    };
+
+  function showQuery() {
+    document.getElementById('drawSection').style.display = 'none';
+    document.getElementById('querySection').style.display = 'block';
+  }
+
+  function showDraw() {
+    document.getElementById('querySection').style.display = 'none';
+    document.getElementById('drawSection').style.display = 'block';
+  }
+
+  function search() {
+    const phone = document.getElementById('queryPhone').value.trim();
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = '查詢中...';
+
+    google.script.run.withSuccessHandler(function(data) {
+      if (data.length === 0) {
+        resultDiv.innerHTML = '查無中獎紀錄';
+        return;
+      }
+
+      let html = '<table border="1" cellpadding="6"><tr><th>抽獎時間</th><th>中獎獎項</th><th>到期日</th><th>兌獎日期</th></tr>';
+      data.forEach(item => {
+        html += `<tr>
+                  <td>${item.time}</td>
+                  <td>${item.prize}</td>
+                  <td>${item.expire}</td>
+                  <td>${item.claimed}</td>
+                </tr>`;
+      });
+      html += '</table>';
+      resultDiv.innerHTML = html;
+    }).queryHistory(phone);
+  }
+
+  
+
+
+
+    function fetchTitle() {
+      google.script.run.withSuccessHandler(title => {
+        document.getElementById('mainTitle').innerText = title;
+        document.title = title;
+      }).getTitle();
+    }
+
+    function fetchDeadline() {
+      google.script.run.withSuccessHandler(dateString => {
+        if (!dateString || typeof dateString !== 'string') {
+          document.getElementById('deadlineDisplay').innerText = '⚠️ 無法取得活動截止日期';
+          document.getElementById('countdownTimer').innerText = '--';
+          document.getElementById('drawBtn').disabled = true;
+          document.getElementById('drawBtn').innerText = '活動已截止';
+          return;
+        }
+        const fullDeadlineStr = dateString.trim() + ' 23:59:59';
+        deadline = new Date(fullDeadlineStr);
+        document.getElementById('deadlineDisplay').innerText = '活動到期日：' + fullDeadlineStr;
+
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+      }).getDeadline();
+    }
+
+function updateCountdown() {
+  const now = new Date();
+  const remaining = deadline - now;
+  const drawBtn = document.getElementById('drawBtn');
+
+  if (remaining <= 0) {
+    document.getElementById('countdownTimer').innerText = '活動已截止';
+    drawBtn.disabled = true;
+    drawBtn.innerText = '活動已截止';
+    clearInterval(countdownInterval);
+  } else {
+    const totalSeconds = Math.floor(remaining / 1000);
+    const days = Math.floor(totalSeconds / (60 * 60 * 24));
+    const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / 3600);  // 加上這行
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    document.getElementById('countdownTimer').innerText = `剩下 ${days}天${hours}時${mins}分${secs}秒`;
+    drawBtn.disabled = false;
+    drawBtn.innerText = '開始抽獎';
+  }
+}
+
+
+    function fetchPrizes() {
+      google.script.run.withSuccessHandler(data => {
+        prizes = data;
+        const container = document.getElementById('prizeContainer');
+        container.innerHTML = '';
+        prizes.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'prize';
+          div.innerText = p.name;
+          container.appendChild(div);
+        });
+        document.getElementById('controls').classList.add('show');
+        document.getElementById('loading').style.display = 'none';
+      }).getPrizes();
+    }
+
+    function getPrizeElements() {
+      return document.querySelectorAll('.prize');
+    }
+
+function startDraw() {
+  const phone = document.getElementById('phone').value.trim();
+  const msg = document.getElementById('message');
+  const drawBtn = document.getElementById('drawBtn');
+  const overlay = document.getElementById('countdownOverlay');
+  const countdown = document.getElementById('countdown');
+  const startText = document.getElementById('startText');
+
+  msg.innerText = '';
+  countdown.innerText = '';
+  overlay.style.display = 'none';
+  startText.style.display = 'none';
+
+  if (!/^09\d{8}$/.test(phone)) {
+    msg.innerText = '請輸入正確的手機號碼';
+    return;
+  }
+
+  if (drawing) return;
+  drawing = true;
+  drawBtn.disabled = true;
+
+  document.getElementById('startSound').play().catch(() => {});
+
+  const deadlineDateStr = deadline.toISOString().slice(0, 10); // yyyy-mm-dd
+
+  // ✅ 只檢查是否在「截止日」這天抽過
+google.script.run.withSuccessHandler(data => {
+  if (data && data.exists) {
+    msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
+    drawBtn.disabled = false;
+    drawing = false;
+    return;
+  }
+
+    // ✅ 沒抽過，進入倒數與抽獎流程
+    let count = 3;
+    countdown.innerText = count;
+    overlay.style.display = 'flex';
+
+    const countdownInterval = setInterval(() => {
+      count--;
+      if (count === 0) {
+        clearInterval(countdownInterval);
+        countdown.innerText = '';
+        startText.style.display = 'block';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          startText.style.display = 'none';
+          beginAnimation(phone, msg, drawBtn);
+        }, 1000);
+      } else {
+        countdown.innerText = count;
+        countdown.style.animation = 'none';
+        void countdown.offsetWidth;
+        countdown.style.animation = 'pop 0.4s';
+      }
+    }, 1000);
+  }).checkDrawOnDeadline(phone); // ✅ 改成新的後端函式
+}
+
+
+
+
+    function beginAnimation(phone, msg, drawBtn) {
+      const elems = getPrizeElements();
+      let current = 0;
+      const totalRounds = 20 + Math.floor(Math.random() * 10);
+      const interval = setInterval(() => {
+        if (highlightIndex >= 0) elems[highlightIndex].classList.remove('highlight');
+        highlightIndex = current % elems.length;
+        elems[highlightIndex].classList.add('highlight');
+        current++;
+        if (current > totalRounds) {
+          clearInterval(interval);
+          const selectedPrize = weightedDraw();
+          const selectedIndex = prizes.findIndex(p => p.name === selectedPrize.name);
+          if (highlightIndex >= 0) elems[highlightIndex].classList.remove('highlight');
+          highlightIndex = selectedIndex;
+          const prizeEl = elems[highlightIndex];
+          prizeEl.classList.add('highlight');
+
+          // 顯示文字訊息（頁面下方）
+          msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
+
+          // 顯示全頁動畫
+          const overlay = document.createElement('div');
+          overlay.className = 'prize-overlay';
+          overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
+          document.body.appendChild(overlay);
+          document.getElementById('winSound').play().catch(() => {});
+          setTimeout(() => overlay.remove(), 5000);
+
+          google.script.run.withSuccessHandler(response => {
+            if (response !== 'OK') {
+              msg.innerText += '\n⚠️ 抽獎紀錄寫入失敗，請稍後再試';
+            }
+            drawing = false;
+            drawBtn.disabled = false;
+          }).recordDraw(phone, selectedPrize.name);
+        }
+      }, 100);
+    }
+
+    function weightedDraw() {
+      const total = prizes.reduce((sum, p) => sum + parseFloat(p.rate), 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < prizes.length; i++) {
+        r -= parseFloat(prizes[i].rate);
+        if (r <= 0) return prizes[i];
+      }
+      return prizes[prizes.length - 1];
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </script>
 </body>
 </html>

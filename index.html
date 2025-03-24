@@ -312,180 +312,180 @@
       fetchPrizes();
     };
 
-  function showQuery() {
-    document.getElementById('drawSection').style.display = 'none';
-    document.getElementById('querySection').style.display = 'block';
-  }
-
-  function showDraw() {
-    document.getElementById('querySection').style.display = 'none';
-    document.getElementById('drawSection').style.display = 'block';
-  }
-
-  function search() {
-    const phone = document.getElementById('queryPhone').value.trim();
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = '查詢中...';
-
-    google.script.run.withSuccessHandler(function(data) {
-      if (data.length === 0) {
-        resultDiv.innerHTML = '查無中獎紀錄';
-        return;
-      }
-
-      let html = '<table border="1" cellpadding="6"><tr><th>抽獎時間</th><th>中獎獎項</th><th>到期日</th><th>兌獎日期</th></tr>';
-      data.forEach(item => {
-        html += `<tr>
-                  <td>${item.time}</td>
-                  <td>${item.prize}</td>
-                  <td>${item.expire}</td>
-                  <td>${item.claimed}</td>
-                </tr>`;
-      });
-      html += '</table>';
-      resultDiv.innerHTML = html;
-    }).queryHistory(phone);
-  }
-
-  
-
-
-
     function fetchTitle() {
-      google.script.run.withSuccessHandler(title => {
-        document.getElementById('mainTitle').innerText = title;
-        document.title = title;
-      }).getTitle();
+      fetch('https://gas-lottery.onrender.com/getTitle')
+        .then(res => res.json())
+        .then(data => {
+          const title = data.title || '活動名稱載入失敗';
+          document.getElementById('mainTitle').innerText = title;
+          document.title = title;
+        })
+        .catch(err => console.error('標題載入失敗', err));
     }
 
     function fetchDeadline() {
-      google.script.run.withSuccessHandler(dateString => {
-        if (!dateString || typeof dateString !== 'string') {
-          document.getElementById('deadlineDisplay').innerText = '⚠️ 無法取得活動截止日期';
-          document.getElementById('countdownTimer').innerText = '--';
-          document.getElementById('drawBtn').disabled = true;
-          document.getElementById('drawBtn').innerText = '活動已截止';
-          return;
-        }
-        const fullDeadlineStr = dateString.trim() + ' 23:59:59';
-        deadline = new Date(fullDeadlineStr);
-        document.getElementById('deadlineDisplay').innerText = '活動到期日：' + fullDeadlineStr;
+      fetch('https://gas-lottery.onrender.com/getDeadline')
+        .then(res => res.json())
+        .then(data => {
+          const dateString = data.deadline;
+          if (!dateString || typeof dateString !== 'string') {
+            document.getElementById('deadlineDisplay').innerText = '⚠️ 無法取得活動截止日期';
+            document.getElementById('countdownTimer').innerText = '--';
+            const btns = document.querySelectorAll('#drawBtn');
+            btns.forEach(btn => {
+              btn.disabled = true;
+              btn.innerText = '活動已截止';
+            });
+            return;
+          }
 
-        updateCountdown();
-        countdownInterval = setInterval(updateCountdown, 1000);
-      }).getDeadline();
+          const fullDeadlineStr = dateString.trim() + ' 23:59:59';
+          deadline = new Date(fullDeadlineStr);
+          document.getElementById('deadlineDisplay').innerText = '活動到期日：' + fullDeadlineStr;
+
+          updateCountdown();
+          countdownInterval = setInterval(updateCountdown, 1000);
+        })
+        .catch(err => console.error('截止日載入失敗', err));
     }
 
-function updateCountdown() {
-  const now = new Date();
-  const remaining = deadline - now;
-  const drawBtn = document.getElementById('drawBtn');
+    function updateCountdown() {
+      const now = new Date();
+      const remaining = deadline - now;
+      const drawBtn = document.getElementById('drawBtn');
 
-  if (remaining <= 0) {
-    document.getElementById('countdownTimer').innerText = '活動已截止';
-    drawBtn.disabled = true;
-    drawBtn.innerText = '活動已截止';
-    clearInterval(countdownInterval);
-  } else {
-    const totalSeconds = Math.floor(remaining / 1000);
-    const days = Math.floor(totalSeconds / (60 * 60 * 24));
-    const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / 3600);  // 加上這行
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-
-    document.getElementById('countdownTimer').innerText = `剩下 ${days}天${hours}時${mins}分${secs}秒`;
-    drawBtn.disabled = false;
-    drawBtn.innerText = '開始抽獎';
-  }
-}
-
+      if (remaining <= 0) {
+        document.getElementById('countdownTimer').innerText = '活動已截止';
+        drawBtn.disabled = true;
+        drawBtn.innerText = '活動已截止';
+        clearInterval(countdownInterval);
+      } else {
+        const totalSeconds = Math.floor(remaining / 1000);
+        const days = Math.floor(totalSeconds / (60 * 60 * 24));
+        const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        document.getElementById('countdownTimer').innerText = `剩下 ${days}天${hours}時${mins}分${secs}秒`;
+        drawBtn.disabled = false;
+        drawBtn.innerText = '開始抽獎';
+      }
+    }
 
     function fetchPrizes() {
-      google.script.run.withSuccessHandler(data => {
-        prizes = data;
-        const container = document.getElementById('prizeContainer');
-        container.innerHTML = '';
-        prizes.forEach(p => {
-          const div = document.createElement('div');
-          div.className = 'prize';
-          div.innerText = p.name;
-          container.appendChild(div);
+      fetch('https://gas-lottery.onrender.com/getPrizes')
+        .then(res => res.json())
+        .then(data => {
+          prizes = data;
+          const container = document.getElementById('prizeContainer');
+          container.innerHTML = '';
+          prizes.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'prize';
+            div.innerText = p.name;
+            container.appendChild(div);
+          });
+          document.getElementById('controls').classList.add('show');
+          document.getElementById('loading').style.display = 'none';
+        })
+        .catch(err => console.error('獎項載入失敗', err));
+    }
+
+    function search() {
+      const phone = document.getElementById('queryPhone').value.trim();
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '查詢中...';
+      fetch(`https://gas-lottery.onrender.com/queryHistory?phone=${encodeURIComponent(phone)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data || data.length === 0) {
+            resultDiv.innerHTML = '查無中獎紀錄';
+            return;
+          }
+          let html = '<table><tr><th>抽獎時間</th><th>中獎獎項</th><th>到期日</th><th>兌獎日期</th></tr>';
+          data.forEach(item => {
+            html += `<tr>
+                      <td>${item.time}</td>
+                      <td>${item.prize}</td>
+                      <td>${item.expire}</td>
+                      <td>${item.claimed}</td>
+                    </tr>`;
+          });
+          html += '</table>';
+          resultDiv.innerHTML = html;
+        })
+        .catch(err => {
+          console.error('查詢失敗', err);
+          resultDiv.innerHTML = '查詢失敗，請稍後再試';
         });
-        document.getElementById('controls').classList.add('show');
-        document.getElementById('loading').style.display = 'none';
-      }).getPrizes();
     }
 
-    function getPrizeElements() {
-      return document.querySelectorAll('.prize');
-    }
+    function startDraw() {
+      const phone = document.getElementById('phone').value.trim();
+      const msg = document.getElementById('message');
+      const drawBtn = document.getElementById('drawBtn');
+      const overlay = document.getElementById('countdownOverlay');
+      const countdown = document.getElementById('countdown');
+      const startText = document.getElementById('startText');
 
-function startDraw() {
-  const phone = document.getElementById('phone').value.trim();
-  const msg = document.getElementById('message');
-  const drawBtn = document.getElementById('drawBtn');
-  const overlay = document.getElementById('countdownOverlay');
-  const countdown = document.getElementById('countdown');
-  const startText = document.getElementById('startText');
+      msg.innerText = '';
+      countdown.innerText = '';
+      overlay.style.display = 'none';
+      startText.style.display = 'none';
 
-  msg.innerText = '';
-  countdown.innerText = '';
-  overlay.style.display = 'none';
-  startText.style.display = 'none';
-
-  if (!/^09\d{8}$/.test(phone)) {
-    msg.innerText = '請輸入正確的手機號碼';
-    return;
-  }
-
-  if (drawing) return;
-  drawing = true;
-  drawBtn.disabled = true;
-
-  document.getElementById('startSound').play().catch(() => {});
-
-  const deadlineDateStr = deadline.toISOString().slice(0, 10); // yyyy-mm-dd
-
-  // ✅ 只檢查是否在「截止日」這天抽過
-google.script.run.withSuccessHandler(data => {
-  if (data && data.exists) {
-    msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
-    drawBtn.disabled = false;
-    drawing = false;
-    return;
-  }
-
-    // ✅ 沒抽過，進入倒數與抽獎流程
-    let count = 3;
-    countdown.innerText = count;
-    overlay.style.display = 'flex';
-
-    const countdownInterval = setInterval(() => {
-      count--;
-      if (count === 0) {
-        clearInterval(countdownInterval);
-        countdown.innerText = '';
-        startText.style.display = 'block';
-        setTimeout(() => {
-          overlay.style.display = 'none';
-          startText.style.display = 'none';
-          beginAnimation(phone, msg, drawBtn);
-        }, 1000);
-      } else {
-        countdown.innerText = count;
-        countdown.style.animation = 'none';
-        void countdown.offsetWidth;
-        countdown.style.animation = 'pop 0.4s';
+      if (!/^09\d{8}$/.test(phone)) {
+        msg.innerText = '請輸入正確的手機號碼';
+        return;
       }
-    }, 1000);
-  }).checkDrawOnDeadline(phone); // ✅ 改成新的後端函式
-}
 
+      if (drawing) return;
+      drawing = true;
+      drawBtn.disabled = true;
 
+      document.getElementById('startSound').play().catch(() => {});
+      const deadlineDateStr = deadline.toISOString().slice(0, 10);
 
+      fetch(`https://gas-lottery.onrender.com/checkDrawOnDeadline?phone=${encodeURIComponent(phone)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.exists) {
+            msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
+            drawBtn.disabled = false;
+            drawing = false;
+            return;
+          }
+          let count = 3;
+          countdown.innerText = count;
+          overlay.style.display = 'flex';
+
+          const countdownInterval = setInterval(() => {
+            count--;
+            if (count === 0) {
+              clearInterval(countdownInterval);
+              countdown.innerText = '';
+              startText.style.display = 'block';
+              setTimeout(() => {
+                overlay.style.display = 'none';
+                startText.style.display = 'none';
+                beginAnimation(phone, msg, drawBtn);
+              }, 1000);
+            } else {
+              countdown.innerText = count;
+              countdown.style.animation = 'none';
+              void countdown.offsetWidth;
+              countdown.style.animation = 'pop 0.4s';
+            }
+          }, 1000);
+        })
+        .catch(err => {
+          console.error('查詢抽獎狀態失敗', err);
+          msg.innerText = '查詢抽獎狀態時發生錯誤';
+          drawBtn.disabled = false;
+          drawing = false;
+        });
+    }
 
     function beginAnimation(phone, msg, drawBtn) {
-      const elems = getPrizeElements();
+      const elems = document.querySelectorAll('.prize');
       let current = 0;
       const totalRounds = 20 + Math.floor(Math.random() * 10);
       const interval = setInterval(() => {
@@ -502,10 +502,8 @@ google.script.run.withSuccessHandler(data => {
           const prizeEl = elems[highlightIndex];
           prizeEl.classList.add('highlight');
 
-          // 顯示文字訊息（頁面下方）
           msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
 
-          // 顯示全頁動畫
           const overlay = document.createElement('div');
           overlay.className = 'prize-overlay';
           overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
@@ -513,13 +511,25 @@ google.script.run.withSuccessHandler(data => {
           document.getElementById('winSound').play().catch(() => {});
           setTimeout(() => overlay.remove(), 5000);
 
-          google.script.run.withSuccessHandler(response => {
+          fetch('https://gas-lottery.onrender.com/recordDraw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, prize: selectedPrize.name })
+          })
+          .then(res => res.text())
+          .then(response => {
             if (response !== 'OK') {
-              msg.innerText += '\n⚠️ 抽獎紀錄寫入失敗，請稍後再試';
+              msg.innerText += '\n⚠️ 抽獎紀錄寫入失敗';
             }
             drawing = false;
             drawBtn.disabled = false;
-          }).recordDraw(phone, selectedPrize.name);
+          })
+          .catch(err => {
+            console.error('紀錄寫入失敗', err);
+            msg.innerText += '\n⚠️ 寫入抽獎紀錄失敗';
+            drawing = false;
+            drawBtn.disabled = false;
+          });
         }
       }, 100);
     }

@@ -491,7 +491,7 @@
       highlightIndex = current % elems.length;
       elems[highlightIndex].classList.add('highlight');
       current++;
-      if (current > totalRounds) {
+      if (current > totalRounds) { 
         clearInterval(interval);
         const selectedPrize = weightedDraw();
         const selectedIndex = prizes.findIndex(p => p.name === selectedPrize.name);

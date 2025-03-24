@@ -241,7 +241,6 @@
   </div>
   <div>　</div>
   <button id="drawBtn" onclick="showQuery()">查詢中獎紀錄</button>
-
 </div>
 
 <audio id="startSound" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
@@ -260,13 +259,15 @@
 </div>
 
 <script>
+  // 後端 API 網址 (Web Service)
+  const BASE_URL = 'https://gas-lottery.onrender.com'; // <=== 這裡請改為您自己的後端服務網址
+
   let prizes = [];
   let drawing = false;
   let highlightIndex = -1;
   let deadline = null;
   let countdownInterval = null;
 
-  // 頁面載入後先呼叫後端 API
   window.onload = () => {
     fetchTitle();
     fetchDeadline();
@@ -291,7 +292,7 @@
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = '查詢中...';
 
-    fetch('/api/query-history', {
+    fetch(`${BASE_URL}/api/query-history`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone })
@@ -322,7 +323,7 @@
 
   // 從後端抓取標題
   function fetchTitle() {
-    fetch('/api/title')
+    fetch(`${BASE_URL}/api/title`)
       .then(response => response.text())
       .then(title => {
         document.getElementById('mainTitle').innerText = title;
@@ -335,7 +336,7 @@
 
   // 從後端抓取活動截止日
   function fetchDeadline() {
-    fetch('/api/deadline')
+    fetch(`${BASE_URL}/api/deadline`)
       .then(response => response.text())
       .then(dateString => {
         if (!dateString) {
@@ -382,7 +383,7 @@
 
   // 從後端抓取獎項列表
   function fetchPrizes() {
-    fetch('/api/prizes')
+    fetch(`${BASE_URL}/api/prizes`)
       .then(response => response.json())
       .then(data => {
         prizes = data;
@@ -434,7 +435,7 @@
     document.getElementById('startSound').play().catch(() => {});
 
     // 檢查是否已在「截止日」這天抽過
-    fetch('/api/check-draw-on-deadline', {
+    fetch(`${BASE_URL}/api/check-draw-on-deadline`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone })
@@ -442,12 +443,12 @@
     .then(response => response.json())
     .then(data => {
       if (data.exists) {
-        // 若後端回傳已抽過獎
+        // 已抽過獎
         msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
         drawBtn.disabled = false;
         drawing = false;
       } else {
-        // 沒抽過 -> 顯示 3 秒倒數
+        // 未抽過 -> 顯示 3 秒倒數
         let count = 3;
         countdown.innerText = count;
         overlay.style.display = 'flex';
@@ -480,7 +481,7 @@
     });
   }
 
-  // 開始抽獎閃爍動畫 + 抽中結果
+  // 抽獎閃爍動畫 + 最終結果
   function beginAnimation(phone, msg, drawBtn) {
     const elems = getPrizeElements();
     let current = 0;
@@ -511,7 +512,7 @@
         setTimeout(() => overlay.remove(), 5000);
 
         // 寫入抽獎紀錄
-        fetch('/api/record-draw', {
+        fetch(`${BASE_URL}/api/record-draw`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone, prize: selectedPrize.name })

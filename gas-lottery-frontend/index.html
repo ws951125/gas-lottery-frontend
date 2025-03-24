@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>會員抽獎活動</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1 id="mainTitle">載入中...</h1>
+  <div id="deadlineDisplay">活動到期日載入中...</div>
+  <div id="countdownTimer">剩下 -- 分 -- 秒</div>
+
+  <div class="controls" id="controls">
+    <input type="text" id="phone" placeholder="輸入您的手機號碼才能抽獎，室話不行喔!" />
+    <button id="drawBtn" onclick="startDraw()">開始抽獎</button>
+  </div>
+
+  <div class="grid" id="prizeContainer"></div>
+  <div class="message" id="message"></div>
+  <div class="loading" id="loading">載入中…</div>
+
+  <audio id="startSound" src="sounds/start.wav" preload="auto"></audio>
+  <audio id="winSound" src="sounds/win.wav" preload="auto"></audio>
+  <audio id="lightSound" src="sounds/light.wav" preload="auto"></audio>
+
+  <script>
+    const API_PROXY_URL = '/api/gas';
+    window.onload = () => {
+      console.log("抽獎頁面已載入，待串接後端。");
+    }
+  </script>
+</body>
+</html>

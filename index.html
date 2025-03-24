@@ -422,10 +422,11 @@
     overlay.style.display = 'none';
     startText.style.display = 'none';
 
-    if (!/^09\\d{8}$/.test(phone)) {
-      msg.innerText = '請輸入正確的手機號碼';
-      return;
-    }
+const phone = document.getElementById('phone').value.trim();
+if (!/^09\d{8}$/.test(phone)) {
+  msg.innerText = '請輸入正確的手機號碼';
+  return;
+}
 
     if (drawing) return;
     drawing = true;

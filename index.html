@@ -222,34 +222,36 @@
     }
 
     /* 浮動容器 - 預設為小尺寸 (smallBox) */
+    /* 容器: 預設小尺寸 (smallBox) */
     #winnerMarqueeContainer {
       position: fixed;
       z-index: 9999;
       box-sizing: border-box;
-      background: #ffe0e0;  /* 淡紅色 */
+      background: #ffe0e0; /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
-      transition: all 0.3s ease; /* 過渡效果 (選用) */
+      /* 避免拖曳時「top,left」被動畫化 => 只做寬/高的過渡 */
+      transition: width 0.3s ease, height 0.3s ease;
     }
 
-    /* 小尺寸: 右側偏上, width:120px, 隱藏內容 */
+    /* 小尺寸: 右側偏上, width:120px, 隱藏內容區 */
     .smallBox {
-      top: 20%;       /* 您可微調, 如 15% or 30% */
+      top: 20%;
       right: 10px;
       width: 120px;
     }
-    /* 在小尺寸時, 隱藏 #marqueeContent */
+    /* 小尺寸時, marqueeContent 隱藏 */
     .smallBox #marqueeContent {
       display: none;
     }
 
-    /* 展開尺寸: 右上, width:350px, 顯示內容 */
+    /* 展開尺寸: 右側(可調整top:10% or 10px) + 寬350px + 顯示內容 */
     .expandedBox {
-      top: 10px;
+      top: 10%;
       right: 10px;
       width: 350px;
     }
-    /* 在展開時, 顯示 #marqueeContent */
+    /* 展開時, 顯示內容 */
     .expandedBox #marqueeContent {
       display: block;
     }
@@ -269,17 +271,16 @@
       margin: 0;
     }
     #marqueeContent li {
-      margin: 1px 0; 
+      margin: 1px 0;
       padding: 0;
     }
 
-    /* 若您不需要自動縮小字體, 就 normal + visible */
+    /* 不換行 + 自動縮小 => autoFitText */
     .line-container {
-      white-space: normal;
-      overflow: visible;
-      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 16px; /* 預設字體 */
     }
-
     
   </style>
 </head>
@@ -290,7 +291,7 @@
 
 
 
-<!-- 浮動容器 -->
+<!-- 預設 smallBox (收合), 位於右側偏上 -->
 <div id="winnerMarqueeContainer" class="smallBox">
   <div id="titleBar">最新中獎名單</div>
   <div id="marqueeContent">
@@ -399,19 +400,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-/** 收合/展開: 切換 smallBox / expandedBox */
+/** 收合/展開函式 */
 function toggleMarquee() {
   const container = document.getElementById('winnerMarqueeContainer');
-  // 若有 inline style (使用者拖過), 清除之 => 回到 class-based 位置
+  // 清除使用者拖曳後的 left/top => 回到 class-based 位置
   container.style.left = '';
   container.style.top = '';
 
   if (container.classList.contains('smallBox')) {
-    // 目前是小 → 切換成大
+    // 從小 -> 展開
     container.classList.remove('smallBox');
     container.classList.add('expandedBox');
   } else {
-    // 目前是大 → 切換成小
+    // 從大 -> 回到小
     container.classList.remove('expandedBox');
     container.classList.add('smallBox');
   }
@@ -455,10 +456,21 @@ function showFiveRecords(records) {
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
     li.appendChild(lineContainer);
     ul.appendChild(li);
+
+    // 自動縮小到 minSize=8
+    autoFitText(lineContainer, 8);
   });
   marquee.appendChild(ul);
 }
 
+/** 自動縮小文字直到 fits 或達最小字體 */
+function autoFitText(elem, minSize = 8) {
+  let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
+  while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
+    fontSize--;
+    elem.style.fontSize = fontSize + 'px';
+  }
+}
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
 function parseChineseTimeToMdHm(str) {
@@ -501,8 +513,8 @@ function formatPhoneLast3(phone) {
 /** 同時支援「點擊標題收合」與「整個容器可拖曳」(含標題) 
  *  利用「拖曳門檻 threshold」判斷點擊 or 拖曳
  */
-/** 拖曳門檻, 同時支援「點擊標題收合」與「整個容器可拖曳」 */
-function initDragAndClick() {
+/** 拖曳門檻: 分辨點擊 or 拖曳 */
+function initDragThreshold() {
   const container = document.getElementById('winnerMarqueeContainer');
   let isDown = false;
   let startX = 0, startY = 0;
@@ -531,10 +543,9 @@ function initDragAndClick() {
       hasMoved = true;
     }
     if (hasMoved) {
-      const x = e.clientX - offsetX;
-      const y = e.clientY - offsetY;
-      container.style.left = x + 'px';
-      container.style.top = y + 'px';
+      // 立即更新 left/top, 無 transition
+      container.style.left = (e.clientX - offsetX) + 'px';
+      container.style.top = (e.clientY - offsetY) + 'px';
     }
   });
 
@@ -543,8 +554,8 @@ function initDragAndClick() {
     isDown = false;
     container.style.opacity = '1';
 
+    // 若未超過門檻 => 視為點擊
     if (!hasMoved) {
-      // 若點擊 titleBar => 收合/展開
       if (e.target.id === 'titleBar') {
         toggleMarquee();
       }
@@ -576,10 +587,8 @@ function initDragAndClick() {
       hasMoved = true;
     }
     if (hasMoved) {
-      const x = touch.clientX - offsetX;
-      const y = touch.clientY - offsetY;
-      container.style.left = x + 'px';
-      container.style.top = y + 'px';
+      container.style.left = (touch.clientX - offsetX) + 'px';
+      container.style.top = (touch.clientY - offsetY) + 'px';
     }
   }, { passive: false });
 

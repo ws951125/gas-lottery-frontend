@@ -34,20 +34,14 @@
       margin-bottom: 20px;
     }
     .prize {
-      padding: 5px;
+      padding: 10px;
       text-align: center;
-      background-color: #f0f0f0; /* 比 #f0f0f0 更深一點的灰 */
+      background-color: #f0f0f0;
       border-radius: 6px;
-      border: 1px solid #ccc; /* 邊框顏色也可再深一點，如 #666 */
       transition: background-color 0.3s;
     }
     .highlight {
-      background-color: #ff4d4d !important; /* 亮紅色背景 */
-      font-size: 20px;                      /* 字體加大 (可依需求調整) */
-      font-weight: bold;                    /* 粗體 */
-      color: white;                         /* 文字顏色為白色 */
-      transition: background-color 0.3s;
-
+      background-color: #ffe066 !important;
     }
     .controls {
       display: none;
@@ -228,14 +222,10 @@
   <div>　</div>
   <div class="grid" id="prizeContainer"></div>
   <div>　</div>
-<!-- 
+
   <div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
   <div style="color: blue;">👉 獎項將於您下一次購買的包裹中一併寄出。<br><br></div>
--->
-
-  <div id="activityDescription" style="color: blue; font-size: 16px;"></div>
-<br>
-  <div style="color: red;font-size: 16px;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
+  <div style="color: red;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
   <br><br>
 
   <div class="controls" id="controls">
@@ -288,7 +278,6 @@
     fetchTitle();
     fetchDeadline();
     fetchPrizes();
-    fetchDescription(); // ← 新增
   };
 
   // 切換到「查詢紀錄」畫面
@@ -426,113 +415,78 @@
   }
 
   // 開始抽獎
-function startDraw() {
-  const phone = document.getElementById('phone').value.trim();
-  const msg = document.getElementById('message');
-  const drawBtn = document.getElementById('drawBtn');
-  const overlay = document.getElementById('countdownOverlay');
-  const countdown = document.getElementById('countdown');
-  const startText = document.getElementById('startText');
+  function startDraw() {
+    const phone = document.getElementById('phone').value.trim();
+    const msg = document.getElementById('message');
+    const drawBtn = document.getElementById('drawBtn');
+    const overlay = document.getElementById('countdownOverlay');
+    const countdown = document.getElementById('countdown');
+    const startText = document.getElementById('startText');
 
-  msg.innerText = '';
-  countdown.innerText = '';
-  overlay.style.display = 'none';
-  startText.style.display = 'none';
+    msg.innerText = '';
+    countdown.innerText = '';
+    overlay.style.display = 'none';
+    startText.style.display = 'none';
 
-  // 手機格式檢查
-  if (!/^09\d{8}$/.test(phone)) {
-    msg.innerText = '請輸入正確的手機號碼';
-    return;
-  }
 
-  // 避免重複點擊
-  if (drawing) return;
-  drawing = true;
-  drawBtn.disabled = true;
+if (!/^09\d{8}$/.test(phone)) {
+  msg.innerText = '請輸入正確的手機號碼';
+  return;
+}
 
-  // ★ 先重新抓取截止日來檢查
-  fetch(`${BASE_URL}/api/deadline`)
-    .then(response => response.text())
-    .then(deadlineString => {
-      if (!deadlineString) {
-        // 若連截止日都拿不到，顯示訊息後中斷
-        msg.innerText = '活動已截止，目前無法抽獎';
+    if (drawing) return;
+    drawing = true;
+    drawBtn.disabled = true;
+
+    // 播放起始音效
+    document.getElementById('startSound').play().catch(() => {});
+
+    // 檢查是否已在「截止日」這天抽過
+    fetch(`${BASE_URL}/api/check-draw-on-deadline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.exists) {
+        // 已抽過獎
+        msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
         drawBtn.disabled = false;
         drawing = false;
-        return;
+      } else {
+        // 未抽過 -> 顯示 3 秒倒數
+        let count = 3;
+        countdown.innerText = count;
+        overlay.style.display = 'flex';
+
+        const countdownInterval = setInterval(() => {
+          count--;
+          if (count === 0) {
+            clearInterval(countdownInterval);
+            countdown.innerText = '';
+            startText.style.display = 'block';
+            setTimeout(() => {
+              overlay.style.display = 'none';
+              startText.style.display = 'none';
+              beginAnimation(phone, msg, drawBtn);
+            }, 1000);
+          } else {
+            countdown.innerText = count;
+            countdown.style.animation = 'none';
+            void countdown.offsetWidth; // 觸發重繪
+            countdown.style.animation = 'pop 0.4s';
+          }
+        }, 1000);
       }
-      // 將活動截止日 + 23:59:59
-      const deadlineDate = new Date(deadlineString + ' 23:59:59');
-      const now = new Date();
-      if (now > deadlineDate) {
-        // ★ 若已超過截止日，顯示提示並結束
-        msg.innerText = '活動已截止，目前無法抽獎';
-        drawBtn.disabled = false;
-        drawing = false;
-        return;
-      }
-
-      // 若尚未截止 → 繼續原本抽獎流程
-
-      // 播放音效
-      document.getElementById('startSound').play().catch(() => {});
-
-      // 檢查是否已在截止日同一天抽過
-      fetch(`${BASE_URL}/api/check-draw-on-deadline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.exists) {
-          // 已抽過獎
-          msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
-          drawBtn.disabled = false;
-          drawing = false;
-        } else {
-          // 未抽過 -> 顯示 3 秒倒數
-          let count = 3;
-          countdown.innerText = count;
-          overlay.style.display = 'flex';
-
-          const countdownInterval = setInterval(() => {
-            count--;
-            if (count === 0) {
-              clearInterval(countdownInterval);
-              countdown.innerText = '';
-              startText.style.display = 'block';
-              setTimeout(() => {
-                overlay.style.display = 'none';
-                startText.style.display = 'none';
-                beginAnimation(phone, msg, drawBtn);
-                document.getElementById('winSound').pause();
-                document.getElementById('winSound').play().catch(() => {});
-              }, 1000);
-            } else {
-              countdown.innerText = count;
-              countdown.style.animation = 'none';
-              void countdown.offsetWidth; // 觸發重繪
-              countdown.style.animation = 'pop 0.4s';
-            }
-          }, 1000);
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        msg.innerText = '後端檢查失敗，請稍後再試';
-        drawBtn.disabled = false;
-        drawing = false;
-      });
     })
     .catch(err => {
       console.error(err);
-      // 若抓截止日失敗，也視為結束
-      msg.innerText = '活動已截止，目前無法抽獎';
+      msg.innerText = '後端檢查失敗，請稍後再試';
       drawBtn.disabled = false;
       drawing = false;
     });
-}
+  }
 
   // 抽獎閃爍動畫 + 最終結果
   function beginAnimation(phone, msg, drawBtn) {
@@ -561,7 +515,7 @@ function startDraw() {
         overlay.className = 'prize-overlay';
         overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
         document.body.appendChild(overlay);
-
+        document.getElementById('winSound').play().catch(() => {});
         setTimeout(() => overlay.remove(), 5000);
 
         // 寫入抽獎紀錄
@@ -598,18 +552,6 @@ function startDraw() {
     }
     return prizes[prizes.length - 1];
   }
-
-  function fetchDescription() {
-  fetch(`${BASE_URL}/api/activity-description`)
-    .then(response => response.text())
-    .then(desc => {
-      // 把拿到的文字直接塞進 #activityDescription
-      document.getElementById('activityDescription').innerHTML = desc;
-    })
-    .catch(() => {
-      document.getElementById('activityDescription').innerText = '(無法取得活動說明)';
-    });
-}
 </script>
 
 </body>

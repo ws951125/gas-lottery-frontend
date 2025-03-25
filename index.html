@@ -262,6 +262,7 @@
       font-weight: bold;
       user-select: none; /* 避免拖曳時選中文字 */
       cursor: pointer;   /* 提示可點擊 */
+      font-size: 18px; /* ★ 這裡可視需求微調 */
     }
 
     /* 內容清單 */
@@ -279,7 +280,7 @@
     .line-container {
       white-space: nowrap;
       overflow: hidden;
-      font-size: 16px; /* 預設字體 */
+      font-size: 14px; /* 預設字體 */
     }
     
   </style>
@@ -294,6 +295,7 @@
 <!-- 預設 smallBox (收合), 位於右側偏上 -->
 <div id="winnerMarqueeContainer" class="smallBox">
   <div id="titleBar">最新中獎名單</div>
+  <hr>
   <div id="marqueeContent">
     <div id="winnerMarquee">尚無中獎資料</div>
   </div>

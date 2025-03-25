@@ -230,7 +230,7 @@
   cursor: move;           /* 提示可拖曳 */
   z-index: 9999;         /* 在最上層 */
 ">
-  <div style="font-weight: bold; margin-bottom: 8px;">今日中獎名單 (活動截止日)</div>
+  <div style="font-weight: bold; margin-bottom: 8px;">最新中獎名單</div>
   <div id="winnerMarquee" style="overflow: hidden; height: 140px;">
     <!-- 這裡動態放輪播項目 -->
   </div>
@@ -332,7 +332,7 @@ window.addEventListener('DOMContentLoaded', () => {
   makeDraggable(document.getElementById('winnerMarqueeContainer'));
 });
 
-// 1. 取得「今日中獎名單 (活動截止日)」資料
+// 1. 取得「最新 5 筆中獎紀錄」後顯示
 async function fetchTodayWinners() {
   try {
     const res = await fetch(`${BASE_URL}/api/today-winners`);
@@ -348,19 +348,18 @@ async function fetchTodayWinners() {
   }
 }
 
-// 2. 一次顯示 5 筆 (由舊到新，最新在最下面)
+// 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)
 function showFiveRecords(records) {
-  // 先清空容器
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 建立一個 table
+  // 建立 table
   const table = document.createElement('table');
 
-  // 建立 thead
+  // thead
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
-  ['中獎時間','電話號碼','中獎獎項'].forEach(txt => {
+  ['中獎時間','電話號碼','中獎項'].forEach(txt => {
     const th = document.createElement('th');
     th.innerText = txt;
     headerRow.appendChild(th);
@@ -368,24 +367,27 @@ function showFiveRecords(records) {
   thead.appendChild(headerRow);
   table.appendChild(thead);
 
-  // 建立 tbody
+  // tbody
   const tbody = document.createElement('tbody');
   table.appendChild(tbody);
 
-  // 逐筆插入 (假設後端已按照時間先後排序，最後一筆是最新)
+  // 逐筆插入 (假設後端已依時間先後排序: 最上面最早, 最下面最新)
   records.forEach(r => {
     const tr = document.createElement('tr');
 
+    // (a) 中獎時間: 只顯示 "MM/DD HH:mm"
     const tdTime = document.createElement('td');
-    tdTime.innerText = r.time;
+    tdTime.innerText = formatTime(r.rawTime || r.time);
     tr.appendChild(tdTime);
 
+    // (b) 電話號碼: 只顯示 "末三碼xxx"
     const tdPhone = document.createElement('td');
-    tdPhone.innerText = formatPhone(r.phone);  // ★ 這裡做電話號碼處理
+    tdPhone.innerText = formatPhoneLast3(r.phone);
     tr.appendChild(tdPhone);
 
+    // (c) 中獎項
     const tdPrize = document.createElement('td');
-    tdPrize.innerText = r.prize;
+    tdPrize.innerText = r.prize || '';
     tr.appendChild(tdPrize);
 
     tbody.appendChild(tr);
@@ -394,47 +396,54 @@ function showFiveRecords(records) {
   marquee.appendChild(table);
 }
 
-// 3. formatPhone: 若只有 9 碼 → 補 0 → 10 碼；再把第 5~7 位替換成 'xxx'
-function formatPhone(raw) {
-  // 先去除非數字
-  let p = raw.replace(/\D/g, '');
-  // 如果只有 9 碼，前面補 0
-  if (p.length === 9) {
-    p = '0' + p;
+// 3. 格式化時間 => "MM/DD HH:mm"
+function formatTime(input) {
+  // 如果有 ISO 格式 rawTime，優先解析
+  // 若沒有 rawTime，只能嘗試 new Date(...) 解析 r.time (需注意中文上午/下午)
+  const d = new Date(input);
+  if (isNaN(d)) {
+    // 解析失敗, 就回傳原字串或空
+    return input;
   }
-  // 如果還不是 10 碼，就原樣回傳
-  if (p.length !== 10) {
-    return raw;
-  }
-  // 將第5~7位 (index 4..6) 替換成 'xxx'
-  return p.slice(0, 4) + 'xxx' + p.slice(7);
+  let mm = d.getMonth() + 1;
+  let dd = d.getDate();
+  let HH = d.getHours();
+  let Min = d.getMinutes();
+  mm = (mm < 10) ? '0' + mm : mm;
+  dd = (dd < 10) ? '0' + dd : dd;
+  HH = (HH < 10) ? '0' + HH : HH;
+  Min = (Min < 10) ? '0' + Min : Min;
+  return `${mm}/${dd} ${HH}:${Min}`;
 }
 
+// 4. 格式化電話 => "末三碼XXX"
+function formatPhoneLast3(phone) {
+  // 只取末三碼
+  const p = phone.replace(/\D/g, ''); // 去除非數字
+  const last3 = p.slice(-3); // 末三碼
+  return `末三碼${last3}`;
+}
 
   //========================輪播功能
 
   //========================輪播功能可移動  
 function makeDraggable(element) {
   let isDown = false;
-  let offsetX = 0;
-  let offsetY = 0;
+  let offsetX = 0, offsetY = 0;
 
-  // ========== 滑鼠事件 ==========
+  // 滑鼠事件
   element.addEventListener('mousedown', (e) => {
     e.preventDefault();
     isDown = true;
     element.style.cursor = 'grabbing';
 
-    // 取得元素在視窗中的位置
     const rect = element.getBoundingClientRect();
-    // 用 e.clientX - rect.left 來計算「滑鼠點擊位置」相對於元素左上角的距離
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
   });
 
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    // 新的 left/top = 滑鼠所在位置 - 當初記錄的偏移量
     element.style.left = (e.clientX - offsetX) + 'px';
     element.style.top = (e.clientY - offsetY) + 'px';
   });
@@ -444,7 +453,7 @@ function makeDraggable(element) {
     element.style.cursor = 'move';
   });
 
-  // ========== 觸控事件 (手機/平板) ==========
+  // 觸控事件 (手機/平板)
   element.addEventListener('touchstart', (e) => {
     e.preventDefault();
     isDown = true;
@@ -459,7 +468,6 @@ function makeDraggable(element) {
   document.addEventListener('touchmove', (e) => {
     if (!isDown) return;
     e.preventDefault();
-
     const touch = e.touches[0];
     element.style.left = (touch.clientX - offsetX) + 'px';
     element.style.top = (touch.clientY - offsetY) + 'px';

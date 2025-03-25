@@ -221,30 +221,28 @@
       background-color: #f1f1f1;
     }
 
-     /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
+    /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
     #winnerMarqueeContainer {
       position: fixed;
       top: 10px;
       left: 10px;
-      width: 350px;           /* 固定寬度 */
-      background: #ffe0e0;    /* 淡紅色 */
+      width: 350px;
+      background: #ffe0e0; /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      /* 整個容器可被拖曳 → cursor: move */
-      cursor: move;
+      /* 先不指定 cursor: move，改以程式動態決定 */
     }
 
-    /* 紅色標題 */
+    /* 標題 (紅色) */
     #titleBar {
       color: red;
       font-weight: bold;
-      cursor: pointer; /* 提示可點擊收合 */
-      user-select: none; /* 避免拖曳時選中文字 */
+      user-select: none; /* 避免選中文字 */
     }
 
-    /* 清單容器 */
+    /* 容器內的清單 */
     #winnerMarqueeContainer ul {
       list-style: none;
       padding: 0;
@@ -257,15 +255,16 @@
       padding: 0;
     }
 
-    /* 單行容器：不換行 + overflow hidden + 自動縮小 */
+    /* 不換行 + overflow hidden + 自動縮字 */
     .line-container {
-      display: block;         /* block 以便正確計算寬度 */
-      width: 100%;            /* 占滿父容器 (350px) */
-      box-sizing: border-box; /* 避免padding或border影響計算 */
-      white-space: nowrap;    /* 不換行 */
-      overflow: hidden;       /* 超出隱藏 */
-      font-size: 16px;        /* 預設字體 */
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 16px; /* 預設字體 */
     }
+
     
   </style>
 </head>
@@ -278,14 +277,11 @@
 
 <!-- 浮動容器 -->
 <div id="winnerMarqueeContainer">
-  <!-- 標題列 (點擊收合/展開) -->
   <div id="titleBar">最新中獎名單</div>
-  <!-- 收合/展開區域 -->
   <div id="marqueeContent">
     <div id="winnerMarquee">尚無中獎資料</div>
   </div>
 </div>
-
 
 
 
@@ -382,11 +378,8 @@
 /** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
-  initDraggable();
+  initDragAndClick();
   setInterval(() => fetchTodayWinners(), 10000);
-
-  const titleBar = document.getElementById('titleBar');
-  titleBar.addEventListener('click', toggleMarquee);
 });
 
 /** 收合/展開函式 */
@@ -398,7 +391,6 @@ function toggleMarquee() {
     content.style.display = 'none';
   }
 }
-  
 
   
 // 1. 取得「最新 5 筆中獎紀錄」後顯示
@@ -416,7 +408,6 @@ async function fetchTodayWinners() {
     document.getElementById('winnerMarquee').innerText = '查詢失敗';
   }
 }
-
 
 
 
@@ -440,7 +431,6 @@ function showFiveRecords(records) {
     const prizeStr = r.prize || '';
 
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
-
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
@@ -452,7 +442,6 @@ function showFiveRecords(records) {
 /** 自動縮小文字直到 fits 或達最小字體 */
 function autoFitText(elem, minSize = 10) {
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
-
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
     fontSize--;
     elem.style.fontSize = fontSize + 'px';
@@ -498,61 +487,112 @@ function formatPhoneLast3(phone) {
   
   //========================輪播功能可移動  
 /** 拖曳 (position: fixed) - 避免亂跳 */
-function initDraggable() {
+/** 同時支援「點擊標題收合」與「整個容器可拖曳」(含標題) 
+ *  利用「拖曳門檻 threshold」判斷點擊 or 拖曳
+ */
+function initDragAndClick() {
   const container = document.getElementById('winnerMarqueeContainer');
-  let isDown = false;
-  let offsetX = 0, offsetY = 0;
+  const titleBar = document.getElementById('titleBar');
 
-  // mousedown (or touchstart) on the entire container
+  let isDown = false;
+  let startX = 0, startY = 0;
+  let offsetX = 0, offsetY = 0;
+  let hasMoved = false; // 判斷是否超過拖曳門檻
+
+  // 門檻 (像素)
+  const DRAG_THRESHOLD = 5;
+
+  // mousedown
   container.addEventListener('mousedown', (e) => {
-    // 若按下在 "titleBar" → 仍可觸發 click(若幾乎沒移動) or drag(若移動多)
     e.preventDefault();
     isDown = true;
+    hasMoved = false;
     container.style.opacity = '0.5';
 
     const rect = container.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
+    startX = e.clientX;
+    startY = e.clientY;
   });
 
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    const x = e.clientX - offsetX;
-    const y = e.clientY - offsetY;
-    container.style.left = x + 'px';
-    container.style.top = y + 'px';
+
+    // 判斷移動距離
+    const distX = e.clientX - startX;
+    const distY = e.clientY - startY;
+    if (Math.abs(distX) > DRAG_THRESHOLD || Math.abs(distY) > DRAG_THRESHOLD) {
+      hasMoved = true; // 超過門檻 → 進入拖曳模式
+    }
+
+    // 拖曳
+    if (hasMoved) {
+      const x = e.clientX - offsetX;
+      const y = e.clientY - offsetY;
+      container.style.left = x + 'px';
+      container.style.top = y + 'px';
+    }
   });
 
-  document.addEventListener('mouseup', () => {
+  document.addEventListener('mouseup', (e) => {
+    if (!isDown) return;
     isDown = false;
     container.style.opacity = '1';
+
+    // 若未超過門檻 → 視為點擊
+    if (!hasMoved) {
+      // 檢查是否點擊了 titleBar
+      if (e.target.id === 'titleBar') {
+        toggleMarquee();
+      }
+    }
   });
 
-  // 觸控
+  // 觸控 (手機/平板)
   container.addEventListener('touchstart', (e) => {
     e.preventDefault();
     isDown = true;
+    hasMoved = false;
     container.style.opacity = '0.5';
 
     const rect = container.getBoundingClientRect();
     const touch = e.touches[0];
     offsetX = touch.clientX - rect.left;
     offsetY = touch.clientY - rect.top;
+    startX = touch.clientX;
+    startY = touch.clientY;
   }, { passive: false });
 
   document.addEventListener('touchmove', (e) => {
     if (!isDown) return;
     e.preventDefault();
     const touch = e.touches[0];
-    const x = touch.clientX - offsetX;
-    const y = touch.clientY - offsetY;
-    container.style.left = x + 'px';
-    container.style.top = y + 'px';
+    const distX = touch.clientX - startX;
+    const distY = touch.clientY - startY;
+    if (Math.abs(distX) > DRAG_THRESHOLD || Math.abs(distY) > DRAG_THRESHOLD) {
+      hasMoved = true;
+    }
+
+    if (hasMoved) {
+      const x = touch.clientX - offsetX;
+      const y = touch.clientY - offsetY;
+      container.style.left = x + 'px';
+      container.style.top = y + 'px';
+    }
   }, { passive: false });
 
-  document.addEventListener('touchend', () => {
+  document.addEventListener('touchend', (e) => {
+    if (!isDown) return;
     isDown = false;
     container.style.opacity = '1';
+
+    if (!hasMoved) {
+      // 若目標是 titleBar → 收合
+      if (e.target.id === 'titleBar') {
+        toggleMarquee();
+      }
+    }
   });
 }
 

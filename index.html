@@ -385,39 +385,35 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
-  // 讓 ul 水平排列、不換行
   ul.style.listStyle = 'none';
   ul.style.padding = '0';
   ul.style.margin = '0';
-  ul.style.whiteSpace = 'nowrap';   // ★ 不自動換行
-  ul.style.overflowX = 'auto';      // ★ 內容超出時水平捲動
-
   marquee.appendChild(ul);
 
   records.forEach(r => {
     const li = document.createElement('li');
-    // 讓 li 水平並排
-    li.style.display = 'inline-block';
-    // 每筆之間留點距離
-    li.style.marginRight = '20px';
+    // 讓每筆資料各占一行，但該行不換行 (white-space: nowrap)
+    // 若文字超出行寬，就可左右捲動 (overflow-x: auto)
+    li.style.display = 'block';      
+    li.style.whiteSpace = 'nowrap';  
+    li.style.overflowX = 'auto';     
+    li.style.width = '100%';         // 讓其可撐滿父容器
+    li.style.boxSizing = 'border-box';
+    li.style.marginBottom = '8px';   // 行間距
 
-    // 1) 時間
+    // 以下示範格式: 03/25 15:10  末三碼223  抽中：竹製王籠-中蜂
     const timeStr = parseChineseTimeToMdHm(r.time);
-    // 2) 電話號碼(最後三碼)
     const phoneStr = formatPhoneLast3(r.phone);
-    // 3) 中獎項
     const prizeStr = r.prize || '';
 
-    // 您想顯示的文字
-    // 例如: 03/25 15:10  末三碼426  抽中：中蜂多功能王籠
-    // 為了更好可讀性，可用 &emsp; / &nbsp; 分隔
-    li.innerHTML = `${timeStr}&emsp;末三碼${phoneStr}&emsp;抽中：${prizeStr}`;
+    li.innerHTML = `${timeStr}　末三碼${phoneStr}　抽中：${prizeStr}`;
+    // 這裡的空格可用 &emsp; / &nbsp; 也行
 
     ul.appendChild(li);
   });
 }
+
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
 function parseChineseTimeToMdHm(str) {

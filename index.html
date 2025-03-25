@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title></title>
   <style>
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: sans-serif;
       padding: 20px;
@@ -214,28 +219,30 @@
     #result tr:hover {
       background-color: #f1f1f1;
     }
+
+    #winnerMarqueeContainer {
+      position: absolute; /* ★ 或改成 fixed，看下文 (B) */
+      top: 10px;
+      left: 10px;
+      width: 350px;
+      background: #fff;
+      border: 2px solid #ccc;
+      padding: 10px;
+      cursor: move;
+      z-index: 9999;
+    }
+
+
+    
   </style>
 </head>
 <body>
 
-
-<!-- 可放在 body 裡最上面 -->
-<div id="winnerMarqueeContainer" style="
-  position: absolute;
-  top: 10px; left: 10px;
-  width: 350px;
-  background: #fff;
-  border: 2px solid #ccc;
-  padding: 10px;
-  cursor: move;           /* 提示可拖曳 */
-  z-index: 9999;         /* 在最上層 */
-">
+<div id="winnerMarqueeContainer">
   <div style="font-weight: bold; margin-bottom: 8px;">最新中獎名單</div>
-  <div id="winnerMarquee" style="overflow: hidden; height: 140px;">
-    <!-- 這裡動態放輪播項目 -->
-  </div>
+  <div id="winnerMarquee">尚無中獎資料</div>
 </div>
-
+<!-- 可放在 body 裡最上面 -->
 
 
 
@@ -375,12 +382,12 @@ function showFiveRecords(records) {
   records.forEach(r => {
     const tr = document.createElement('tr');
 
-    // (a) 中獎時間: 只顯示 "MM/DD HH:mm"
+    // (a) 中獎時間: 手動解析中文上午/下午 => "MM/DD HH:mm"
     const tdTime = document.createElement('td');
-    tdTime.innerText = formatTime(r.rawTime || r.time);
+    tdTime.innerText = parseChineseTimeToMdHm(r.time);
     tr.appendChild(tdTime);
 
-    // (b) 電話號碼: 只顯示 "末三碼xxx"
+    // (b) 電話號碼: 只顯示 "末三碼###"
     const tdPhone = document.createElement('td');
     tdPhone.innerText = formatPhoneLast3(r.phone);
     tr.appendChild(tdPhone);
@@ -396,27 +403,38 @@ function showFiveRecords(records) {
   marquee.appendChild(table);
 }
 
-// 3. 格式化時間 => "MM/DD HH:mm"
-function formatTime(input) {
-  // 如果有 ISO 格式 rawTime，優先解析
-  // 若沒有 rawTime，只能嘗試 new Date(...) 解析 r.time (需注意中文上午/下午)
-  const d = new Date(input);
-  if (isNaN(d)) {
-    // 解析失敗, 就回傳原字串或空
-    return input;
+// 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
+function parseChineseTimeToMdHm(str) {
+  // 先用正則取出 "YYYY/M/D 上午/下午 H:MM:SS"
+  // 範例：2025/3/25 下午 2:43:22
+  // group1=2025, group2=3, group3=25, group4=下午, group5=2, group6=43, group7=22
+  const re = /^(\d{4})\/(\d{1,2})\/(\d{1,2})\s*(上午|下午)\s*(\d{1,2})\:(\d{1,2})(?:\:(\d{1,2}))?/;
+  const match = str.trim().match(re);
+  if (!match) {
+    // 若不符合，就直接回傳原字串
+    return str;
   }
-  let mm = d.getMonth() + 1;
-  let dd = d.getDate();
-  let HH = d.getHours();
-  let Min = d.getMinutes();
-  mm = (mm < 10) ? '0' + mm : mm;
-  dd = (dd < 10) ? '0' + dd : dd;
-  HH = (HH < 10) ? '0' + HH : HH;
-  Min = (Min < 10) ? '0' + Min : Min;
-  return `${mm}/${dd} ${HH}:${Min}`;
+  let [_, year, m, d, ampm, hh, mm, ss] = match;
+  // 轉成 number
+  m = parseInt(m, 10);
+  d = parseInt(d, 10);
+  hh = parseInt(hh, 10);
+  mm = parseInt(mm, 10);
+
+  // 如果是 '下午' 且 hh < 12 => hh += 12
+  // (若是下午 12 點則不加，根據實際需求)
+  if (ampm === '下午' && hh < 12) {
+    hh += 12;
+  }
+  // 格式化成 MM/DD HH:mm
+  const MM = (m < 10) ? '0' + m : m;
+  const DD = (d < 10) ? '0' + d : d;
+  const HH = (hh < 10) ? '0' + hh : hh;
+  const Min = (mm < 10) ? '0' + mm : mm;
+  return `${MM}/${DD} ${HH}:${Min}`;
 }
 
-// 4. 格式化電話 => "末三碼XXX"
+// 4. 電話號碼 => "末三碼###"
 function formatPhoneLast3(phone) {
   // 只取末三碼
   const p = phone.replace(/\D/g, ''); // 去除非數字
@@ -426,10 +444,16 @@ function formatPhoneLast3(phone) {
 
   //========================輪播功能
 
+
+
+  
   //========================輪播功能可移動  
 function makeDraggable(element) {
   let isDown = false;
   let offsetX = 0, offsetY = 0;
+
+  // 取得目前是 absolute 還是 fixed
+  const computedPos = window.getComputedStyle(element).position;
 
   // 滑鼠事件
   element.addEventListener('mousedown', (e) => {
@@ -437,6 +461,7 @@ function makeDraggable(element) {
     isDown = true;
     element.style.cursor = 'grabbing';
 
+    // 用 getBoundingClientRect() 算出容器與視窗的相對位置
     const rect = element.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
@@ -444,8 +469,20 @@ function makeDraggable(element) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    element.style.left = (e.clientX - offsetX) + 'px';
-    element.style.top = (e.clientY - offsetY) + 'px';
+
+    if (computedPos === 'absolute') {
+      // ★ absolute: top/left 以文件為基準 => pageX - window.scrollX
+      const x = e.pageX - offsetX;
+      const y = e.pageY - offsetY;
+      element.style.left = x + 'px';
+      element.style.top = y + 'px';
+    } else {
+      // ★ fixed: top/left 以視窗為基準 => clientX
+      const x = e.clientX - offsetX;
+      const y = e.clientY - offsetY;
+      element.style.left = x + 'px';
+      element.style.top = y + 'px';
+    }
   });
 
   document.addEventListener('mouseup', () => {
@@ -469,8 +506,20 @@ function makeDraggable(element) {
     if (!isDown) return;
     e.preventDefault();
     const touch = e.touches[0];
-    element.style.left = (touch.clientX - offsetX) + 'px';
-    element.style.top = (touch.clientY - offsetY) + 'px';
+
+    if (computedPos === 'absolute') {
+      // absolute => pageX
+      const x = touch.pageX - offsetX;
+      const y = touch.pageY - offsetY;
+      element.style.left = x + 'px';
+      element.style.top = y + 'px';
+    } else {
+      // fixed => clientX
+      const x = touch.clientX - offsetX;
+      const y = touch.clientY - offsetY;
+      element.style.left = x + 'px';
+      element.style.top = y + 'px';
+    }
   }, { passive: false });
 
   document.addEventListener('touchend', () => {

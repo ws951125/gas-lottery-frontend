@@ -295,11 +295,14 @@
 }
 
 #titleBar {
+  display: flex;         /* 讓裡面的子元素橫向排列 */
+  align-items: left;   /* 置中/置左 */
+  /* 如果您想要讓它 sticky 在最上方： */
   position: sticky;
   top: 0;
   background-color: white;
-  z-index: 1000;
-  padding: 10px 0;
+  z-index: 999;
+  /* 其他樣式... */
 }
 
 input::placeholder {

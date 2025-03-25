@@ -221,37 +221,37 @@
       background-color: #f1f1f1;
     }
 
-    /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
+    /* 浮動容器 - 預設為小尺寸 (smallBox) */
     #winnerMarqueeContainer {
       position: fixed;
       z-index: 9999;
       box-sizing: border-box;
-      background: #ffe0e0; /* 淡紅色 */
+      background: #ffe0e0;  /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
-      /* 預設為小尺寸 => smallBox */
-    }
-    /* 動畫/過渡 (選擇性) */
-    #winnerMarqueeContainer {
-      transition: all 0.3s ease;
+      transition: all 0.3s ease; /* 過渡效果 (選用) */
     }
 
-    /* 小尺寸 (預設) */
+    /* 小尺寸: 右側偏上, width:120px, 隱藏內容 */
     .smallBox {
-      /* 右側偏中上位置 (您可自行微調) */
-      top: 30%;
+      top: 20%;       /* 您可微調, 如 15% or 30% */
       right: 10px;
       width: 120px;
-      height: auto;
+    }
+    /* 在小尺寸時, 隱藏 #marqueeContent */
+    .smallBox #marqueeContent {
+      display: none;
     }
 
-    /* 展開尺寸 */
+    /* 展開尺寸: 右上, width:350px, 顯示內容 */
     .expandedBox {
-      /* 攤開到右上大區塊 (可自行微調) */
       top: 10px;
       right: 10px;
       width: 350px;
-      height: auto; /* 或可寫 60%/80%... */
+    }
+    /* 在展開時, 顯示 #marqueeContent */
+    .expandedBox #marqueeContent {
+      display: block;
     }
 
     /* 紅色標題 */
@@ -262,30 +262,22 @@
       cursor: pointer;   /* 提示可點擊 */
     }
 
-    /* 內容區 */
-    #marqueeContent {
-      margin-top: 8px;
-    }
-
     /* 內容清單 */
-    #winnerMarqueeContainer ul {
+    #marqueeContent ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-    #winnerMarqueeContainer li {
+    #marqueeContent li {
       margin: 1px 0; 
       padding: 0;
     }
 
-    /* 不換行 + overflow hidden + 自動縮小 */
+    /* 若您不需要自動縮小字體, 就 normal + visible */
     .line-container {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      white-space: nowrap;
-      overflow: hidden;
-      font-size: 16px; /* 預設字體 */
+      white-space: normal;
+      overflow: visible;
+      font-size: 16px;
     }
 
     
@@ -407,15 +399,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-/** 收合/展開函式：切換 smallBox / expandedBox */
+/** 收合/展開: 切換 smallBox / expandedBox */
 function toggleMarquee() {
   const container = document.getElementById('winnerMarqueeContainer');
+  // 若有 inline style (使用者拖過), 清除之 => 回到 class-based 位置
+  container.style.left = '';
+  container.style.top = '';
+
   if (container.classList.contains('smallBox')) {
-    // 若目前是 smallBox → 切換到 expandedBox
+    // 目前是小 → 切換成大
     container.classList.remove('smallBox');
     container.classList.add('expandedBox');
   } else {
-    // 反之 → 回到 smallBox
+    // 目前是大 → 切換成小
     container.classList.remove('expandedBox');
     container.classList.add('smallBox');
   }
@@ -459,19 +455,8 @@ function showFiveRecords(records) {
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
     li.appendChild(lineContainer);
     ul.appendChild(li);
-
-    autoFitText(lineContainer, 8); // ★ 最小字體 = 8
   });
   marquee.appendChild(ul);
-}
-
-/** 自動縮小文字直到 fits 或達最小字體 */
-function autoFitText(elem, minSize = 8) {
-  let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
-  while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
-    fontSize--;
-    elem.style.fontSize = fontSize + 'px';
-  }
 }
 
 
@@ -516,6 +501,7 @@ function formatPhoneLast3(phone) {
 /** 同時支援「點擊標題收合」與「整個容器可拖曳」(含標題) 
  *  利用「拖曳門檻 threshold」判斷點擊 or 拖曳
  */
+/** 拖曳門檻, 同時支援「點擊標題收合」與「整個容器可拖曳」 */
 function initDragAndClick() {
   const container = document.getElementById('winnerMarqueeContainer');
   let isDown = false;
@@ -558,7 +544,7 @@ function initDragAndClick() {
     container.style.opacity = '1';
 
     if (!hasMoved) {
-      // 若點擊titleBar → 收合
+      // 若點擊 titleBar => 收合/展開
       if (e.target.id === 'titleBar') {
         toggleMarquee();
       }
@@ -603,7 +589,6 @@ function initDragAndClick() {
     container.style.opacity = '1';
 
     if (!hasMoved) {
-      // 若點擊titleBar → 收合
       if (e.target.id === 'titleBar') {
         toggleMarquee();
       }

@@ -8,7 +8,7 @@
   <style>
     
     html, body {
-      margin: 0;
+      margin: 0; 
       padding: 0;
     }
     body {
@@ -221,7 +221,7 @@
       background-color: #f1f1f1;
     }
 
-    /* 浮動容器：背景改淡紅色 (#ffe0e0)，並固定在視窗左上角 */
+   /* 浮動容器 - 淡紅色背景 + 固定位置 + 灰色邊框 */
     #winnerMarqueeContainer {
       position: fixed;
       top: 10px;
@@ -232,19 +232,20 @@
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      cursor: move;
+      cursor: move; /* 提示可拖曳 */
     }
 
-    /* 讓清單自動增高，不限定高度 */
+    /* 容器內的清單 (中獎紀錄) */
     #winnerMarqueeContainer ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
 
-    /* 每行 (li) 行距很小 */
+
+    /* 每行之間行距極小 */
     #winnerMarqueeContainer li {
-      margin: 1px 0;
+      margin: 1px 0; 
       padding: 0;
     }
 
@@ -254,20 +255,15 @@
       box-sizing: border-box;
       white-space: nowrap;
       overflow: hidden;
-      font-size: 16px; /* 預設字體 */
+      font-size: 16px; /* 預設字體大小 */
     }
 
-    /* 按鈕樣式，可依需求調整 */
-    #toggleBtn {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 2px 6px;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
+    /* 紅色標題 */
+    #titleBar {
+      color: red;
+      font-weight: bold;
+      cursor: pointer; /* 提示可點擊 */
     }
-    
-
 
     
 
@@ -295,17 +291,14 @@
 
 
   
-<!-- 浮動容器（淡紅色背景 + 紅色標題 + 右上角按鈕） -->
+<!-- 浮動容器 -->
 <div id="winnerMarqueeContainer">
-  <!-- 標題列：左邊紅字標題、右邊收合按鈕 -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-    <span style="color: red; font-weight: bold;">最新中獎名單</span>
-    <button id="toggleBtn">收合</button>
+  <!-- 標題列 (改用 span#titleBar 來收合) -->
+  <div style="margin-bottom: 8px;">
+    <span id="titleBar">最新中獎名單</span>
   </div>
-  <!-- 放中獎紀錄的容器 -->
   <div id="winnerMarquee">尚無中獎資料</div>
 </div>
-
 
 
 
@@ -375,7 +368,12 @@
   <button id="drawBtn" onclick="showDraw()">返回抽獎</button>
 </div>
 
+
+
+  
 <script>
+
+  
   // 後端 API 網址 (Web Service)
   const BASE_URL = 'https://gas-lottery.onrender.com'; // <=== 這裡請改為您自己的後端服務網址
 
@@ -402,22 +400,21 @@ document.addEventListener('DOMContentLoaded', () => {
   makeDraggable(document.getElementById('winnerMarqueeContainer'));
   setInterval(() => fetchTodayWinners(), 10000);
 
-  // 收合/展開 按鈕點擊事件
-  const toggleBtn = document.getElementById('toggleBtn');
-  toggleBtn.addEventListener('click', () => {
+
+  
+  // 點擊紅色標題文字收合/展開
+  const titleBar = document.getElementById('titleBar');
+  titleBar.addEventListener('click', () => {
     const marquee = document.getElementById('winnerMarquee');
     if (marquee.style.display === 'none') {
-      // 若目前是隱藏 → 展開
       marquee.style.display = '';
-      toggleBtn.innerText = '收合';
     } else {
-      // 若目前是顯示 → 收合
       marquee.style.display = 'none';
-      toggleBtn.innerText = '展開';
     }
   });
 });
 
+  
 
   
 // 1. 取得「最新 5 筆中獎紀錄」後顯示
@@ -436,6 +433,8 @@ async function fetchTodayWinners() {
   }
 }
 
+
+  
 // 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)
 function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
@@ -445,14 +444,14 @@ function showFiveRecords(records) {
   const reversed = [...records].reverse();
 
   const ul = document.createElement('ul');
-
   reversed.forEach(r => {
     const li = document.createElement('li');
+    
     // 單行容器
     const lineContainer = document.createElement('div');
     lineContainer.className = 'line-container';
 
-    // 解析時間 / 電話末三碼 / 中獎項
+    // 格式化: 時間 / 末三碼 / 中獎項
     const timeStr = parseChineseTimeToMdHm(r.time);
     const phoneStr = formatPhoneLast3(r.phone);
     const prizeStr = r.prize || '';
@@ -465,11 +464,10 @@ function showFiveRecords(records) {
     // 自動縮小字體
     autoFitText(lineContainer, 10);
   });
-
   marquee.appendChild(ul);
 }
 
-/** 自動縮小文字，避免超出容器寬度 */
+/** 自動縮小字體直到 fits 或達最小字體 */
 function autoFitText(elem, minSize = 10) {
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
@@ -500,6 +498,7 @@ function parseChineseTimeToMdHm(str) {
   return `${MM}/${DD} ${HH}:${Min}`;
 }
 
+
 // 4. 電話號碼 => "末三碼###"
 function formatPhoneLast3(phone) {
   const p = phone.replace(/\D/g, '');
@@ -522,6 +521,7 @@ function makeDraggable(element) {
     e.preventDefault();
     isDown = true;
     element.style.cursor = 'grabbing';
+    element.style.opacity = '0.5'; // 拖動時半透明
 
     const rect = element.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
@@ -530,7 +530,6 @@ function makeDraggable(element) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    // fixed => clientX/clientY
     const x = e.clientX - offsetX;
     const y = e.clientY - offsetY;
     element.style.left = x + 'px';
@@ -540,6 +539,7 @@ function makeDraggable(element) {
   document.addEventListener('mouseup', () => {
     isDown = false;
     element.style.cursor = 'move';
+    element.style.opacity = '1'; // 放開後恢復不透明
   });
 
   // 觸控 (手機/平板)
@@ -547,6 +547,7 @@ function makeDraggable(element) {
     e.preventDefault();
     isDown = true;
     element.style.cursor = 'grabbing';
+    element.style.opacity = '0.5';
 
     const touch = e.touches[0];
     const rect = element.getBoundingClientRect();
@@ -567,6 +568,7 @@ function makeDraggable(element) {
   document.addEventListener('touchend', () => {
     isDown = false;
     element.style.cursor = 'move';
+    element.style.opacity = '1';
   });
 }
 

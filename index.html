@@ -225,21 +225,21 @@
     #winnerMarqueeContainer {
       position: fixed;
       top: 10px;
-      left: 10px;
-      width: 350px;
-      background: #ffe0e0; /* 淡紅色 */
+      right: 10px;           /* 改為右上角 */
+      width: 350px;          /* 固定寬度 */
+      background: #ffe0e0;   /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      /* 先不指定 cursor: move，改以程式動態決定 */
+      /* 以程式區分「點擊」或「拖曳」 */
     }
 
-    /* 標題 (紅色) */
+    /* 紅色標題 */
     #titleBar {
       color: red;
       font-weight: bold;
-      user-select: none; /* 避免選中文字 */
+      user-select: none; /* 避免拖曳時選中文字 */
     }
 
     /* 容器內的清單 */
@@ -255,7 +255,7 @@
       padding: 0;
     }
 
-    /* 不換行 + overflow hidden + 自動縮字 */
+    /* 不換行 + overflow hidden + 自動縮小 */
     .line-container {
       display: block;
       width: 100%;
@@ -278,7 +278,8 @@
 <!-- 浮動容器 -->
 <div id="winnerMarqueeContainer">
   <div id="titleBar">最新中獎名單</div>
-  <div id="marqueeContent">
+  <!-- 預設「收合」：display: none -->
+  <div id="marqueeContent" style="display: none;">
     <div id="winnerMarquee">尚無中獎資料</div>
   </div>
 </div>
@@ -291,9 +292,11 @@
 
 
 
+
   
 <div id="drawSection">
   <h1 id="mainTitle">載入中...</h1>
+  <hr>
   <div>　</div>
   <div id="deadlineDisplay" style="font-weight: bold;">活動到期日載入中...</div>
   <div id="countdownTimer">剩下 -- 分 -- 秒</div>
@@ -379,7 +382,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
   initDragAndClick();
-  setInterval(() => fetchTodayWinners(), 10000);
+  setInterval(() => fetchTodayWinners(), 5000);
 });
 
 /** 收合/展開函式 */
@@ -410,7 +413,6 @@ async function fetchTodayWinners() {
 }
 
 
-
   
 // 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)
 function showFiveRecords(records) {
@@ -434,13 +436,13 @@ function showFiveRecords(records) {
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
-    autoFitText(lineContainer, 10);
+    autoFitText(lineContainer, 8); // ★ 最小字體 = 8
   });
   marquee.appendChild(ul);
 }
 
 /** 自動縮小文字直到 fits 或達最小字體 */
-function autoFitText(elem, minSize = 10) {
+function autoFitText(elem, minSize = 8) {
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
     fontSize--;
@@ -492,17 +494,12 @@ function formatPhoneLast3(phone) {
  */
 function initDragAndClick() {
   const container = document.getElementById('winnerMarqueeContainer');
-  const titleBar = document.getElementById('titleBar');
-
   let isDown = false;
   let startX = 0, startY = 0;
   let offsetX = 0, offsetY = 0;
-  let hasMoved = false; // 判斷是否超過拖曳門檻
-
-  // 門檻 (像素)
+  let hasMoved = false;
   const DRAG_THRESHOLD = 5;
 
-  // mousedown
   container.addEventListener('mousedown', (e) => {
     e.preventDefault();
     isDown = true;
@@ -518,15 +515,11 @@ function initDragAndClick() {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-
-    // 判斷移動距離
     const distX = e.clientX - startX;
     const distY = e.clientY - startY;
     if (Math.abs(distX) > DRAG_THRESHOLD || Math.abs(distY) > DRAG_THRESHOLD) {
-      hasMoved = true; // 超過門檻 → 進入拖曳模式
+      hasMoved = true;
     }
-
-    // 拖曳
     if (hasMoved) {
       const x = e.clientX - offsetX;
       const y = e.clientY - offsetY;
@@ -540,16 +533,15 @@ function initDragAndClick() {
     isDown = false;
     container.style.opacity = '1';
 
-    // 若未超過門檻 → 視為點擊
     if (!hasMoved) {
-      // 檢查是否點擊了 titleBar
+      // 若點擊titleBar → 收合
       if (e.target.id === 'titleBar') {
         toggleMarquee();
       }
     }
   });
 
-  // 觸控 (手機/平板)
+  // 觸控
   container.addEventListener('touchstart', (e) => {
     e.preventDefault();
     isDown = true;
@@ -573,7 +565,6 @@ function initDragAndClick() {
     if (Math.abs(distX) > DRAG_THRESHOLD || Math.abs(distY) > DRAG_THRESHOLD) {
       hasMoved = true;
     }
-
     if (hasMoved) {
       const x = touch.clientX - offsetX;
       const y = touch.clientY - offsetY;
@@ -588,7 +579,7 @@ function initDragAndClick() {
     container.style.opacity = '1';
 
     if (!hasMoved) {
-      // 若目標是 titleBar → 收合
+      // 若點擊titleBar → 收合
       if (e.target.id === 'titleBar') {
         toggleMarquee();
       }

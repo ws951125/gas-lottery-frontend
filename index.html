@@ -257,11 +257,20 @@
 </head>
 <body>
 
-<div id="winnerMarqueeContainer">
+<!-- 浮動容器 -->
+<div id="winnerMarqueeContainer" style="
+  position: absolute; 
+  top: 10px; left: 10px;
+  width: 350px;            /* 固定寬度，作為邊框寬度 */
+  background: #fff;
+  border: 2px solid #ccc;
+  padding: 10px;
+  box-sizing: border-box;  /* 確保 padding 不會額外撐大 */
+  z-index: 9999;
+">
   <div style="font-weight: bold; margin-bottom: 8px;">最新中獎名單</div>
   <div id="winnerMarquee">尚無中獎資料</div>
 </div>
-<!-- 可放在 body 裡最上面 -->
 
 
 
@@ -385,6 +394,10 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
+  // 先將最新紀錄顯示在最上方 => reverse()
+  // 若後端已是最新在前，就可不做這步
+  const reversed = [...records].reverse(); 
+
   // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
   ul.style.listStyle = 'none';
@@ -392,55 +405,49 @@ function showFiveRecords(records) {
   ul.style.margin = '0';
   marquee.appendChild(ul);
 
-  records.forEach(r => {
+  reversed.forEach(r => {
     // 每筆資料對應一個 <li>
     const li = document.createElement('li');
-    // 行與行之間只留極小空白
-    li.style.margin = '1px 0'; 
+    // 行與行之間僅留極小間距
+    li.style.margin = '1px 0';
     li.style.padding = '0';
 
-    // 建立一個行容器 (div)，讓灰色背景可覆蓋整行
+    // 單行容器
     const lineContainer = document.createElement('div');
-    // 設定寬度 100%，box-sizing: border-box，確保背景能完整包住
-    lineContainer.style.display = 'block';
+    // 寬度 100% (相對於 #winnerMarqueeContainer 的內部寬度)
     lineContainer.style.width = '100%';
     lineContainer.style.boxSizing = 'border-box';
 
-    // 不換行 & 隱藏超出
+    // 不換行 + 不顯示捲軸
     lineContainer.style.whiteSpace = 'nowrap';
     lineContainer.style.overflow = 'hidden';
-
-    // 灰色背景、內邊距
-    lineContainer.style.background = '#eee';
-    lineContainer.style.padding = '3px';
 
     // 預設字體大小
     lineContainer.style.fontSize = '16px';
 
-    // 1) 中獎時間 (轉成 MM/DD HH:mm)
+    // 時間 (ex: "03/25 16:02")
     const timeStr = parseChineseTimeToMdHm(r.time);
-    // 2) 電話號碼只顯示最後三碼
+    // 電話號碼末三碼 (ex: "223")
     const phoneStr = formatPhoneLast3(r.phone);
-    // 3) 中獎項
+    // 中獎項
     const prizeStr = r.prize || '';
 
-    // 組合文字，例如：
-    // 03/25 16:02  末三碼223  抽中：竹製王籠-中蜂
+    // 組合文字
+    // 例如: "03/25 16:02  末三碼223  抽中：竹製王籠-中蜂"
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
 
-    // 放進 li
+    // 加入 li
     li.appendChild(lineContainer);
-    // 放進 ul
     ul.appendChild(li);
 
-    // ★ 自動縮小字體，直到容納得下或達到最小字體 10px
+    // ★ 自動縮小字體直到能容納，或達到最小字體 10px
     autoFitText(lineContainer, 10);
   });
 }
 
-
 /**
- * 在元素文字超出寬度時，不斷縮小字體，直到 fits 或到達最小字體。
+ * 在文字超出容器寬度時，持續縮小 font-size，
+ * 直到 fits 或到達最小字體 (minSize)。
  */
 function autoFitText(elem, minSize = 10) {
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
@@ -449,6 +456,7 @@ function autoFitText(elem, minSize = 10) {
     elem.style.fontSize = fontSize + 'px';
   }
 }
+
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
 function parseChineseTimeToMdHm(str) {

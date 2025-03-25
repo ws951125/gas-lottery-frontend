@@ -395,10 +395,9 @@
 /** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
-  initDragAndClick();
+  initDragThreshold();  // ← 這裡改用 initDragThreshold()
   setInterval(() => fetchTodayWinners(), 10000);
 });
-
 
 /** 收合/展開函式 */
 function toggleMarquee() {
@@ -604,6 +603,7 @@ function initDragThreshold() {
     }
   });
 }
+
 
 //========================輪播功能可移動  
 

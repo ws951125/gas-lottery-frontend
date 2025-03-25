@@ -257,14 +257,17 @@
     }
 
     /* 紅色標題 */
-    #titleBar {
-      color: red;
-      font-weight: bold;
-      user-select: none; /* 避免拖曳時選中文字 */
-      cursor: pointer;   /* 提示可點擊 */
-      font-size: 18px; /* ★ 這裡可視需求微調 */
-    }
-
+  #titleBar {
+    display: inline-block;  /* 能正確計算 clientWidth */
+    white-space: nowrap;    /* 不換行 */
+    overflow: hidden;       /* 超出隱藏，避免跑到第二行 */
+    font-size: 24px;        /* 預設大字體 */
+    color: red;
+    font-weight: bold;
+    user-select: none;
+    cursor: pointer;
+  }
+    
     /* 內容清單 */
     #marqueeContent ul {
       list-style: none;
@@ -392,13 +395,25 @@
 
 
 
+  function autoFitTitle(elem, minSize = 12) {
+  let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
+  while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
+    fontSize--;
+    elem.style.fontSize = fontSize + 'px';
+  }
+}
+
+  
+
+
 //================================輪播功能
   // 頁面載入後執行
 /** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
   initDragThreshold();  // ← 這裡改用 initDragThreshold()
-  setInterval(() => fetchTodayWinners(), 10000);
+  autoFitTitle(document.getElementById('titleBar'), 12);
+  setInterval(() => fetchTodayWinners(), 5000);
 });
 
 /** 收合/展開函式 */

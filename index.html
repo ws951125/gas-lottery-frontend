@@ -385,6 +385,7 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
+  // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
   ul.style.listStyle = 'none';
   ul.style.padding = '0';
@@ -392,27 +393,44 @@ function showFiveRecords(records) {
   marquee.appendChild(ul);
 
   records.forEach(r => {
+    // 每筆資料是一個 <li>
     const li = document.createElement('li');
-    // 讓每筆資料各占一行，但該行不換行 (white-space: nowrap)
-    // 若文字超出行寬，就可左右捲動 (overflow-x: auto)
-    li.style.display = 'block';      
-    li.style.whiteSpace = 'nowrap';  
-    li.style.overflowX = 'auto';     
-    li.style.width = '100%';         // 讓其可撐滿父容器
-    li.style.boxSizing = 'border-box';
-    li.style.marginBottom = '8px';   // 行間距
+    li.style.marginBottom = '8px'; // 行距
 
-    // 以下示範格式: 03/25 15:10  末三碼223  抽中：竹製王籠-中蜂
-    const timeStr = parseChineseTimeToMdHm(r.time);
+    // 在 li 裡放一個「捲動容器」span/div
+    // 使得整行不換行，但可水平捲動
+    // 也讓灰底能隨寬度 100% 撐開
+    const lineContainer = document.createElement('div');
+    // 設定寬度 100%，以便背景顯示整行
+    lineContainer.style.width = '100%';
+    lineContainer.style.boxSizing = 'border-box';
+
+    // 讓該容器可以水平捲動
+    lineContainer.style.whiteSpace = 'nowrap';
+    lineContainer.style.overflowX = 'auto';
+
+    // 背景、內距
+    lineContainer.style.background = '#eee';  
+    lineContainer.style.padding = '6px';
+
+    // 1) 時間 (ex: "03/25 14:43")
+    const timeStr = parseChineseTimeToMdHm(r.time);  
+    // 2) 電話號碼只顯示最後三碼 (ex: "223")
     const phoneStr = formatPhoneLast3(r.phone);
+    // 3) 中獎項
     const prizeStr = r.prize || '';
 
-    li.innerHTML = `${timeStr}　末三碼${phoneStr}　抽中：${prizeStr}`;
-    // 這裡的空格可用 &emsp; / &nbsp; 也行
+    // 文字內容，如：
+    // 03/25 16:02   末三碼223   抽中：竹製王籠-中蜂
+    lineContainer.textContent = `${timeStr}　末三碼${phoneStr}　抽中：${prizeStr}`;
 
+    // 加到 li
+    li.appendChild(lineContainer);
+    // 加到 ul
     ul.appendChild(li);
   });
 }
+
 
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"

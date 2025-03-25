@@ -293,7 +293,12 @@
   position: relative;
   z-index: 9999;
 }
-
+    
+#phone {
+  width: 300px;   /* 您想要的固定寬度，例如 300px */
+  max-width: 100%; /* 可避免太小螢幕時超出畫面 (可選) */
+}
+    
 #titleBar {
   display: flex;         /* 讓裡面的子元素橫向排列 */
   align-items: center;   /* 置中/置左 */
@@ -375,7 +380,7 @@ input::placeholder {
 
 <!-- 收合 -->
 
-<div id="ruleContent" class="rule-content hide" style="color: red; font-size: 16px;">
+<div id="ruleContent" class="rule-content" style="color: red; font-size: 18px;">
   <div id="activityDescription" style="color: blue; font-size: 16px;"></div>
 <br>
   <div style="color: red;font-size: 16px;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
@@ -577,12 +582,17 @@ function startDraw() {
   const overlay = document.getElementById('countdownOverlay');
   const countdown = document.getElementById('countdown');
   const startText = document.getElementById('startText');
+
+  // 加入以下一行，讓點了開始抽獎就收合 ruleContent
+  const ruleDiv = document.getElementById('ruleContent');
+  ruleDiv.classList.add('hide');
   
   // 每次抽獎前，先把所有格子的 scale-up、highlight 移除
   const elems = document.querySelectorAll('.prize');
   elems.forEach(el => {
     el.classList.remove('scale-up', 'highlight', 'final-scale');
   });
+
   
   
   msg.innerText = '';

@@ -221,7 +221,7 @@
       background-color: #f1f1f1;
     }
 
-    /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
+     /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
     #winnerMarqueeContainer {
       position: fixed;
       top: 10px;
@@ -232,20 +232,16 @@
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      /* 不設 cursor: move，因為只在 dragArea 可拖曳 */
+      /* 整個容器可被拖曳 → cursor: move */
+      cursor: move;
     }
 
-    /* 紅色標題，可點擊收合 */
+    /* 紅色標題 */
     #titleBar {
       color: red;
       font-weight: bold;
       cursor: pointer; /* 提示可點擊收合 */
-    }
-
-    /* 收合區域(非標題)可被拖曳 */
-    #dragArea {
-      cursor: move;
-      margin-top: 8px;
+      user-select: none; /* 避免拖曳時選中文字 */
     }
 
     /* 清單容器 */
@@ -280,14 +276,12 @@
 
 
 
-  
 <!-- 浮動容器 -->
-
 <div id="winnerMarqueeContainer">
   <!-- 標題列 (點擊收合/展開) -->
   <div id="titleBar">最新中獎名單</div>
   <!-- 收合/展開區域 -->
-  <div id="dragArea">
+  <div id="marqueeContent">
     <div id="winnerMarquee">尚無中獎資料</div>
   </div>
 </div>
@@ -388,7 +382,7 @@
 /** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
-  makeDraggable();
+  initDraggable();
   setInterval(() => fetchTodayWinners(), 10000);
 
   const titleBar = document.getElementById('titleBar');
@@ -397,11 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /** 收合/展開函式 */
 function toggleMarquee() {
-  const dragArea = document.getElementById('dragArea');
-  if (dragArea.style.display === 'none') {
-    dragArea.style.display = '';
+  const content = document.getElementById('marqueeContent');
+  if (content.style.display === 'none') {
+    content.style.display = '';
   } else {
-    dragArea.style.display = 'none';
+    content.style.display = 'none';
   }
 }
   
@@ -425,6 +419,7 @@ async function fetchTodayWinners() {
 
 
 
+
   
 // 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)
 function showFiveRecords(records) {
@@ -440,7 +435,6 @@ function showFiveRecords(records) {
     const lineContainer = document.createElement('div');
     lineContainer.className = 'line-container';
 
-    // 格式化
     const timeStr = parseChineseTimeToMdHm(r.time);
     const phoneStr = formatPhoneLast3(r.phone);
     const prizeStr = r.prize || '';
@@ -450,7 +444,6 @@ function showFiveRecords(records) {
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
-    // ★ 自動縮小
     autoFitText(lineContainer, 10);
   });
   marquee.appendChild(ul);
@@ -458,16 +451,13 @@ function showFiveRecords(records) {
 
 /** 自動縮小文字直到 fits 或達最小字體 */
 function autoFitText(elem, minSize = 10) {
-  // 強制一次 reflow
-  elem.style.display = 'block'; // 確保計算正確
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
 
-  // 若 scrollWidth > clientWidth，就縮字
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
     fontSize--;
     elem.style.fontSize = fontSize + 'px';
   }
-} // ← 關閉函式
+}
 
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
@@ -508,18 +498,17 @@ function formatPhoneLast3(phone) {
   
   //========================輪播功能可移動  
 /** 拖曳 (position: fixed) - 避免亂跳 */
-function makeDraggable() {
+function initDraggable() {
   const container = document.getElementById('winnerMarqueeContainer');
-  const dragArea = document.getElementById('dragArea');
   let isDown = false;
   let offsetX = 0, offsetY = 0;
 
-  // 當使用者在 dragArea 上 mousedown，才開始可拖
-  dragArea.addEventListener('mousedown', (e) => {
+  // mousedown (or touchstart) on the entire container
+  container.addEventListener('mousedown', (e) => {
+    // 若按下在 "titleBar" → 仍可觸發 click(若幾乎沒移動) or drag(若移動多)
     e.preventDefault();
-    e.stopPropagation(); // 避免點到標題
     isDown = true;
-    container.style.opacity = '0.5'; // 拖動時半透明
+    container.style.opacity = '0.5';
 
     const rect = container.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
@@ -536,13 +525,12 @@ function makeDraggable() {
 
   document.addEventListener('mouseup', () => {
     isDown = false;
-    container.style.opacity = '1'; 
+    container.style.opacity = '1';
   });
 
-  // 觸控 (手機/平板) => dragArea
-  dragArea.addEventListener('touchstart', (e) => {
+  // 觸控
+  container.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    e.stopPropagation();
     isDown = true;
     container.style.opacity = '0.5';
 

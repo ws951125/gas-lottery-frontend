@@ -313,6 +313,7 @@ input::placeholder {
 
   /* 點擊標題的樣式 */
 .rule-title {
+  font-size: 16px;
   font-weight: bold;
   color: blue;
   cursor: pointer;
@@ -368,10 +369,12 @@ input::placeholder {
   
 <!-- 收合的按鈕 -->
   <div class="rule-title" onclick="toggleRule()">
-  規則說明(點擊查看)
+  ●規則說明(點擊查看)
+  <hr>
 </div>
 
 <!-- 收合 -->
+
 <div id="ruleContent" class="rule-content hide" style="color: red; font-size: 16px;">
   <div id="activityDescription" style="color: blue; font-size: 16px;"></div>
 <br>

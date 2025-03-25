@@ -276,6 +276,7 @@
   <div id="countdownTimer">剩下 -- 分 -- 秒</div>
   <div>　</div>
   <div style="color: blue; font-size: 20px;">📩本期抽獎獎項📩<br></div>
+  <hr>
   <div>　</div>
   <div class="grid" id="prizeContainer"></div>
   <div>　</div>
@@ -377,47 +378,32 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 建立 table
-  const table = document.createElement('table');
+  // 建立 <ul> 來放多筆紀錄
+  const ul = document.createElement('ul');
+  ul.style.listStyle = 'none';
+  ul.style.padding = '0';
+  marquee.appendChild(ul);
 
-  // thead
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  ['中獎時間','電話號碼','中獎項'].forEach(txt => {
-    const th = document.createElement('th');
-    th.innerText = txt;
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  // tbody
-  const tbody = document.createElement('tbody');
-  table.appendChild(tbody);
-
-  // 逐筆插入 (假設後端已依時間先後排序: 最上面最早, 最下面最新)
   records.forEach(r => {
-    const tr = document.createElement('tr');
+    const li = document.createElement('li');
+    li.style.marginBottom = '8px';
 
-    // (a) 中獎時間: 手動解析中文上午/下午 => "MM/DD HH:mm"
-    const tdTime = document.createElement('td');
-    tdTime.innerText = parseChineseTimeToMdHm(r.time);
-    tr.appendChild(tdTime);
+    // 1) 格式化時間 (ex: "03/25 14:43")
+    const timeStr = parseChineseTimeToMdHm(r.time);
 
-    // (b) 電話號碼: 只顯示 "末三碼###"
-    const tdPhone = document.createElement('td');
-    tdPhone.innerText = formatPhoneLast3(r.phone);
-    tr.appendChild(tdPhone);
+    // 2) 電話號碼最後三碼 (ex: "223")
+    const phoneStr = formatPhoneLast3(r.phone);
 
-    // (c) 中獎項
-    const tdPrize = document.createElement('td');
-    tdPrize.innerText = r.prize || '';
-    tr.appendChild(tdPrize);
+    // 3) 中獎項
+    const prizeStr = r.prize || '';
 
-    tbody.appendChild(tr);
+    // ★ 新的文字格式：
+    //   03/25 15:10    末三碼426    抽中：中蜂多功能王籠
+    //   利用 &emsp; 做分隔，並在電話號碼前加 "末三碼"、在獎項前加 "抽中："
+    li.innerHTML = `${timeStr}&emsp;末三碼${phoneStr}&emsp;抽中：${prizeStr}`;
+
+    ul.appendChild(li);
   });
-
-  marquee.appendChild(table);
 }
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"

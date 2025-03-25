@@ -746,7 +746,7 @@ function beginAnimation(phone, msg, drawBtn) {
       .then(res => {
         if (res === 'OK') {
           // (A) 寫入成功 → 顯示中獎動畫
-          msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
+          msg.innerHTML = `🎉 恭喜您抽中：<br><span class="prize-text">${selectedPrize.name}</span>`;
           msg.scrollIntoView({ behavior: 'smooth' });
 
           // 全畫面動畫

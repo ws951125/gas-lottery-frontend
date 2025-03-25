@@ -222,9 +222,13 @@
   <div>　</div>
   <div class="grid" id="prizeContainer"></div>
   <div>　</div>
-
+<!-- 
   <div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
   <div style="color: blue;">👉 獎項將於您下一次購買的包裹中一併寄出。<br><br></div>
+-->
+
+  <div id="activityDescription" style="color: blue; font-size: 20px;"></div>
+<br>
   <div style="color: red;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
   <br><br>
 
@@ -278,6 +282,7 @@
     fetchTitle();
     fetchDeadline();
     fetchPrizes();
+    fetchDescription(); // ← 新增
   };
 
   // 切換到「查詢紀錄」畫面
@@ -585,6 +590,18 @@ function startDraw() {
     }
     return prizes[prizes.length - 1];
   }
+
+  function fetchDescription() {
+  fetch(`${BASE_URL}/api/activity-description`)
+    .then(response => response.text())
+    .then(desc => {
+      // 把拿到的文字直接塞進 #activityDescription
+      document.getElementById('activityDescription').innerHTML = desc;
+    })
+    .catch(() => {
+      document.getElementById('activityDescription').innerText = '(無法取得活動說明)';
+    });
+}
 </script>
 
 </body>

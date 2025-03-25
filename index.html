@@ -33,7 +33,15 @@
       gap: 10px;
       margin-bottom: 20px;
     }
+
     
+#mainTitle {
+  position: sticky;
+  top: 0;
+  background-color: white; /* 背景色，避免捲動時被蓋住 */
+  z-index: 1000;            /* 層級要夠高，避免被蓋住 */
+  padding: 10px 0;          /* 上下留一點空間 */
+}
     
 .prize {
   /* 這裡示範一個 2:1 的比例，可自行調整 */
@@ -285,6 +293,14 @@
   position: relative;
   z-index: 9999;
 }
+
+#titleBar {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1000;
+  padding: 10px 0;
+}
     
     
   </style>
@@ -292,8 +308,10 @@
 <body>
 
 <div id="drawSection">
+<div id="titleBar">
   <h1 id="mainTitle">載入中...</h1>
   <hr>
+</div>
   <div>　</div>
   <div id="deadlineDisplay" style="font-weight: bold;">活動到期日載入中...</div>
   <div id="countdownTimer">剩下 -- 分 -- 秒</div>

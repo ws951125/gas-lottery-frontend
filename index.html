@@ -221,64 +221,51 @@
       background-color: #f1f1f1;
     }
 
-   /* 浮動容器 - 淡紅色背景 + 固定位置 + 灰色邊框 */
+     /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
     #winnerMarqueeContainer {
       position: fixed;
       top: 10px;
       left: 10px;
       width: 350px;
-      background: #ffe0e0; /* 淡紅色背景 */
+      background: #ffe0e0; /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      cursor: move; /* 提示可拖曳 */
+      /* 不設 cursor: move，改在內部大部分區域可以拖曳 */
     }
 
-    /* 容器內的清單 (中獎紀錄) */
+    /* 容器內的清單 */
     #winnerMarqueeContainer ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-
-
-    /* 每行之間行距極小 */
+    /* 每行行距極小 */
     #winnerMarqueeContainer li {
       margin: 1px 0; 
       padding: 0;
     }
 
-    /* 單行容器：不換行、隱藏超出，自動縮字 */
-    .line-container {
-      width: 100%;
-      box-sizing: border-box;
-      white-space: nowrap;
-      overflow: hidden;
-      font-size: 16px; /* 預設字體大小 */
-    }
+    /* 單行容器：不換行 + overflow hidden + 文字太長則 autoFit */
+.line-container {
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 16px;
+}
 
     /* 紅色標題 */
     #titleBar {
       color: red;
       font-weight: bold;
-      cursor: pointer; /* 提示可點擊 */
+      cursor: pointer; /* 提示可點擊收合 */
     }
 
-    
-
-  table {
-    border-collapse: collapse; /* 也可用 separate */
-    width: 100%;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 12px 20px; /* 讓欄位更寬鬆 */
-    text-align: center;
-  }
-  th {
-    background: #f0f0f0;
-  }
+    /* 給容器大部分區域可拖曳 */
+    #dragArea {
+      /* 這是除標題外的區域 */
+      cursor: move; /* 滑鼠提示 */
+    }
 
     
   </style>
@@ -292,14 +279,15 @@
 
   
 <!-- 浮動容器 -->
-<div id="winnerMarqueeContainer">
-  <!-- 標題列 (改用 span#titleBar 來收合) -->
-  <div style="margin-bottom: 8px;">
-    <span id="titleBar">最新中獎名單</span>
-  </div>
-  <div id="winnerMarquee">尚無中獎資料</div>
-</div>
 
+<div id="winnerMarqueeContainer">
+  <!-- 1) 紅色標題 + 其下放 #dragArea 讓拖曳事件在此區域生效 -->
+  <div id="titleBar">最新中獎名單</div>
+  <!-- 收合/展開的區域 -->
+  <div id="dragArea" style="margin-top: 8px;">
+    <div id="winnerMarquee">尚無中獎資料</div>
+  </div>
+</div>
 
 
 
@@ -402,17 +390,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   
-  // 點擊紅色標題文字收合/展開
+  // 點擊紅字標題 => 收合/展開
   const titleBar = document.getElementById('titleBar');
-  titleBar.addEventListener('click', () => {
-    const marquee = document.getElementById('winnerMarquee');
-    if (marquee.style.display === 'none') {
-      marquee.style.display = '';
-    } else {
-      marquee.style.display = 'none';
-    }
-  });
+  titleBar.addEventListener('click', toggleMarquee);
+  // 為了讓手機也能點擊，不需要額外 touchend；click 在手機上也可觸發
 });
+
+/** 收合/展開函式 */
+function toggleMarquee() {
+  const dragArea = document.getElementById('dragArea');
+  if (dragArea.style.display === 'none') {
+    dragArea.style.display = '';
+  } else {
+    dragArea.style.display = 'none';
+  }
+}
 
   
 
@@ -440,34 +432,29 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 若後端是舊->新，則反轉
+  // 若後端是舊->新 => reverse
   const reversed = [...records].reverse();
 
   const ul = document.createElement('ul');
   reversed.forEach(r => {
     const li = document.createElement('li');
-    
-    // 單行容器
     const lineContainer = document.createElement('div');
     lineContainer.className = 'line-container';
 
-    // 格式化: 時間 / 末三碼 / 中獎項
     const timeStr = parseChineseTimeToMdHm(r.time);
     const phoneStr = formatPhoneLast3(r.phone);
     const prizeStr = r.prize || '';
-
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
 
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
-    // 自動縮小字體
     autoFitText(lineContainer, 10);
   });
   marquee.appendChild(ul);
 }
 
-/** 自動縮小字體直到 fits 或達最小字體 */
+/** 自動縮小文字直到 fits 或達最小字體 */
 function autoFitText(elem, minSize = 10) {
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
@@ -475,6 +462,7 @@ function autoFitText(elem, minSize = 10) {
     elem.style.fontSize = fontSize + 'px';
   }
 }
+
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
 function parseChineseTimeToMdHm(str) {
@@ -499,6 +487,7 @@ function parseChineseTimeToMdHm(str) {
 }
 
 
+
 // 4. 電話號碼 => "末三碼###"
 function formatPhoneLast3(phone) {
   const p = phone.replace(/\D/g, '');
@@ -513,17 +502,20 @@ function formatPhoneLast3(phone) {
   
   //========================輪播功能可移動  
 /** 拖曳 (position: fixed) - 避免亂跳 */
-function makeDraggable(element) {
+function makeDraggable() {
+  const container = document.getElementById('winnerMarqueeContainer');
+  const dragArea = document.getElementById('dragArea');
   let isDown = false;
   let offsetX = 0, offsetY = 0;
 
-  element.addEventListener('mousedown', (e) => {
+  // 當使用者在 dragArea 上 mousedown，才開始可拖
+  dragArea.addEventListener('mousedown', (e) => {
     e.preventDefault();
+    e.stopPropagation(); // 避免點到標題
     isDown = true;
-    element.style.cursor = 'grabbing';
-    element.style.opacity = '0.5'; // 拖動時半透明
+    container.style.opacity = '0.5'; // 拖動時半透明
 
-    const rect = element.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
   });
@@ -532,25 +524,24 @@ function makeDraggable(element) {
     if (!isDown) return;
     const x = e.clientX - offsetX;
     const y = e.clientY - offsetY;
-    element.style.left = x + 'px';
-    element.style.top = y + 'px';
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
   });
 
   document.addEventListener('mouseup', () => {
     isDown = false;
-    element.style.cursor = 'move';
-    element.style.opacity = '1'; // 放開後恢復不透明
+    container.style.opacity = '1'; 
   });
 
-  // 觸控 (手機/平板)
-  element.addEventListener('touchstart', (e) => {
+  // 觸控 (手機/平板) => dragArea
+  dragArea.addEventListener('touchstart', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     isDown = true;
-    element.style.cursor = 'grabbing';
-    element.style.opacity = '0.5';
+    container.style.opacity = '0.5';
 
+    const rect = container.getBoundingClientRect();
     const touch = e.touches[0];
-    const rect = element.getBoundingClientRect();
     offsetX = touch.clientX - rect.left;
     offsetY = touch.clientY - rect.top;
   }, { passive: false });
@@ -561,14 +552,13 @@ function makeDraggable(element) {
     const touch = e.touches[0];
     const x = touch.clientX - offsetX;
     const y = touch.clientY - offsetY;
-    element.style.left = x + 'px';
-    element.style.top = y + 'px';
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
   }, { passive: false });
 
   document.addEventListener('touchend', () => {
     isDown = false;
-    element.style.cursor = 'move';
-    element.style.opacity = '1';
+    container.style.opacity = '1';
   });
 }
 

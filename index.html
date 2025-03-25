@@ -328,8 +328,13 @@
 //================================輪播功能
   // 頁面載入後執行
 window.addEventListener('DOMContentLoaded', () => {
-  fetchTodayWinners();
+  fetchTodayWinners(); // 第一次載入就抓資料
   makeDraggable(document.getElementById('winnerMarqueeContainer'));
+
+  // ★ 每 10 秒重新抓一次最新資料
+  setInterval(() => {
+    fetchTodayWinners();
+  }, 10_000);
 });
 
 // 取得「今日中獎名單 (活動截止日)」並啟動輪播

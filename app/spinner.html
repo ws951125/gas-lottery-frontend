@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隨機抽獎</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: clamp(10px, 2vw, 20px);
+        }
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: clamp(300px, 80vw, 500px);
+        }
+        @media (min-width: 768px) {
+            body {
+                flex-direction: row;
+                justify-content: center;
+                align-items: flex-start;
+            }
+            .left-panel, .right-panel {
+                width: 45%;
+                max-width: 500px;
+                margin-left: clamp(10px, 2vw, 50px);
+            }
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        h2 {
+            font-size: clamp(18px, 4vw, 44px); /* 響應式文字大小 */
+            color: #000;
+            margin: 0.5;
+        }
+        #container {
+            position: relative;
+            width: clamp(250px, 80vw, 400px); /* 響應式寬度 */
+            height: clamp(250px, 80vw, 400px); /* 響應式高度 */
+            background: #ffd700;
+            border: clamp(2px, 1vw, 5px) solid #d4a017;
+            border-radius: clamp(5px, 1vw, 10px);
+            box-shadow: 0 0 clamp(5px, 1vw, 10px) rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            resize: both;
+            overflow: auto;
+        }
+        .grid {
+            display: grid;
+            gap: clamp(2px, 0.5vw, 5px);
+            width: 90%;
+            height: 90%;
+        }
+        .cell {
+            background: #fff;
+            border: clamp(1px, 0.5vw, 2px) solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(12px, 3vw, 18px); /* 響應式文字大小 */
+            color: #333;
+            transition: background-color 0.3s;
+            border-radius: clamp(2px, 0.5vw, 5px);
+        }
+        .cell.active {
+            background: #ff0000;
+            color: #fff;
+        }
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-bottom: clamp(10px, 2vh, 20px);
+        }
+        .input-section label {
+            font-size: clamp(14px, 3vw, 18px); /* 響應式文字大小 */
+            font-weight: bold;
+            margin-bottom: clamp(5px, 1vh, 10px);
+        }
+        textarea, input {
+            width: 100%;
+            max-width: clamp(200px, 80vw, 350px);
+            padding: clamp(2px, 0.5vw, 5px);
+            font-size: clamp(12px, 2vw, 14px); /* 響應式文字大小 */
+            resize: none;
+            overflow-y: hidden;
+        }
+        textarea {
+            background-color: #ffffff;
+            min-height: clamp(80px, 15vh, 100px);
+            max-height: none;
+        }
+        button {
+            margin: clamp(5px, 1vh, 10px) 0;
+            padding: clamp(5px, 1vw, 10px) clamp(10px, 2vw, 20px);
+            font-size: clamp(12px, 2vw, 20px); /* 響應式文字大小 */
+            cursor: pointer;
+            background: #ffcc33;
+            border: clamp(1px, 0.5vw, 2px) solid #d4a017;
+            border-radius: clamp(2px, 0.5vw, 5px);
+        }
+        button:hover {
+            background: #e6b800;
+        }
+        #history {
+            background-color: #eaffea;
+        }
+        #result {
+            margin-top: clamp(5px, 1vh, 10px);
+            font-size: clamp(14px, 3vw, 18px); /* 響應式文字大小 */
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        /* 媒體查詢：針對小螢幕（手機）做更多調整 */
+        @media (max-width: 767px) {
+            .left-panel, .right-panel {
+                margin-left: 0;
+                width: 90%;
+            }
+            #container {
+                width: 90vw;
+                height: 90vw;
+            }
+            .grid {
+                width: 85%;
+                height: 85%;
+            }
+            textarea, input {
+                width: 90vw;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-panel">
+        <div class="header">
+            <h2>隨機抽獎</h2>
+            <button onclick="spinSlots()">開始抽獎</button>
+        </div>
+        <div id="container">
+            <div class="grid" id="grid"></div>
+        </div>
+    </div>
+    <div class="right-panel">
+        <div class="input-section">
+            <label for="prizeInput"><br>抽獎獎項：</label>
+            <input type="text" id="prizeInput" placeholder="例如：大獎、特獎" />
+            <div style="height: clamp(10px, 2vh, 20px);"></div>
+            <label for="itemInput">抽獎名單：</label>
+            <textarea id="itemInput" oninput="autoResize(this)" placeholder="每行輸入一個項目"></textarea>
+            <button onclick="updateItems()">更新清單</button>
+        </div>
+        <div class="input-section">
+            <label for="history">抽獎紀錄：</label>
+            <textarea id="history" readonly oninput="autoResize(this)"></textarea>
+            <button onclick="clearHistory()">清空</button>
+        </div>
+    </div>
+    <audio id="startSound" src="http://sbkbuy.byethost12.com/start.wav"></audio>
+    <audio id="lightSound" src="http://sbkbuy.byethost12.com/light.wav"></audio>
+    <audio id="winSound" src="http://sbkbuy.byethost12.com/win.wav"></audio>
+    <script>
+        function autoResize(element) {
+            element.style.height = 'auto';
+            element.style.height = (element.scrollHeight) + 'px';
+        }
+        
+        let items = [];
+        let prizeHistory = {};
+        function updateItems() {
+            const input = document.getElementById('itemInput').value;
+            items = input.split('\n').map(item => item.trim()).filter(item => item !== '');
+            renderGrid();
+        }
+        function renderGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            if (items.length === 0) return;
+            const gridSize = Math.ceil(Math.sqrt(items.length));
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${Math.ceil(items.length / gridSize)}, 1fr)`;
+            items.forEach((item) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerText = item;
+                grid.appendChild(cell);
+            });
+        }
+        function spinSlots() {
+            document.getElementById('startSound').play();
+            const cells = document.querySelectorAll('.cell');
+            if (cells.length === 0) return;
+            let step = 0;
+            const speed = 100;
+            let intervalId = setInterval(() => {
+                cells.forEach(cell => cell.classList.remove('active'));
+                let randomIndex = Math.floor(Math.random() * cells.length);
+                cells[randomIndex].classList.add('active');
+                document.getElementById('lightSound').play();
+                step++;
+                if (step > 30) {
+                    clearInterval(intervalId);
+                    setTimeout(() => {
+                        let finalIndex = Math.floor(Math.random() * items.length);
+                        cells.forEach(cell => cell.classList.remove('active'));
+                        cells[finalIndex].classList.add('active');
+                        document.getElementById('winSound').play();
+                        let prize = document.getElementById('prizeInput').value || "未命名獎項";
+                        let winner = items[finalIndex];
+                        if (!prizeHistory[prize]) {
+                            prizeHistory[prize] = [];
+                        }
+                        prizeHistory[prize].push(winner);
+                        let historyElement = document.getElementById('history');
+                        historyElement.value = Object.entries(prizeHistory)
+                            .map(([p, w]) => `ーーーーーーーーーーーー\n● 抽獎獎項：${p}\n● 中獎名單：\n${w.join('\n')}`)
+                            .join('\n\n');
+                        autoResize(historyElement);
+                    }, 300);
+                }
+            }, speed);
+        }
+        function clearHistory() {
+            document.getElementById('history').value = '';
+            prizeHistory = {};
+        }
+    </script>
+</body>
+</html>

@@ -298,6 +298,11 @@
   width: 300px;   /* 您想要的固定寬度，例如 300px */
   max-width: 100%; /* 可避免太小螢幕時超出畫面 (可選) */
 }
+
+#queryPhone {
+  width: 300px;   /* 您想要的固定寬度，例如 300px */
+  max-width: 100%; /* 可避免太小螢幕時超出畫面 (可選) */
+}
     
 #titleBar {
   display: flex;         /* 讓裡面的子元素橫向排列 */
@@ -411,7 +416,7 @@ input::placeholder {
   
 <div id="querySection" style="display: none;">
   <h2>查詢中獎紀錄</h2>
-  <input type="text" id="queryPhone" placeholder="請輸入手機號碼">
+  <input type="text" id="queryPhone" placeholder="請輸入要查詢的手機號碼">
   <div>　</div>
   <button id="drawBtn" onclick="search()">查詢中獎紀錄</button>
   <div>　</div>
@@ -581,15 +586,18 @@ function startDraw() {
   const countdown = document.getElementById('countdown');
   const startText = document.getElementById('startText');
 
-  // 加入以下一行，讓點了開始抽獎就收合 ruleContent
-  const ruleDiv = document.getElementById('ruleContent');
-  ruleDiv.classList.add('hide');
-  
   // 2. 捲動到頁面頂端
   window.scrollTo({
     top: 0,
     behavior: 'smooth'  // 平滑捲動，可改 'auto' 為瞬間跳
   });  
+
+  
+  // 加入以下一行，讓點了開始抽獎就收合 ruleContent
+  const ruleDiv = document.getElementById('ruleContent');
+  ruleDiv.classList.add('hide');
+  
+
 
 
   // 每次抽獎前，先把所有格子的 scale-up、highlight 移除

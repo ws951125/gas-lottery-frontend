@@ -368,7 +368,7 @@ input::placeholder {
   
 <!-- 收合的按鈕 -->
   <div class="rule-title" onclick="toggleRule()">
-  規則說明
+  規則說明(點擊查看)
 </div>
 
 <!-- 收合 -->
@@ -762,6 +762,12 @@ function beginAnimation(phone, msg, drawBtn) {
   }, 100);
 }
 
+  
+function toggleRule() {
+  const content = document.getElementById('ruleContent');
+  content.classList.toggle('hide'); 
+  // 有 hide 就移除，沒有就加上
+}
 
   // 根據獎項的 rate 權重來抽
   function weightedDraw() {

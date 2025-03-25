@@ -100,6 +100,24 @@
       transition: background-color 0.3s;
 
     }
+
+.form-container {
+  max-width: 80%; /* 您想要的固定寬度（或 350px / 400px...） */
+  margin: 0 auto;   /* 置中 (可依需求調整) */
+  display: flex;
+  flex-direction: column; /* 垂直排列 */
+  gap: 10px;              /* 每個項目間距 */
+}
+
+.form-container input,
+.form-container button {
+  width: 100%;      /* 撐滿容器 */
+  box-sizing: border-box; /* 確保 padding 不超出 100% */
+  font-size: 18px;  /* 統一字體大小 */
+  padding: 10px;    /* 統一內距 */
+}
+
+    
     .controls {
       display: none;
     }
@@ -382,7 +400,7 @@ input::placeholder {
   <br><br>
 </div>
 
-  <div class="controls" id="controls">
+  <div class="form-container">
     <input type="text" id="phone" placeholder="點這裡輸入手機號碼才能抽獎" />
     <button id="drawBtn" onclick="startDraw()">開始抽獎</button>
   </div>

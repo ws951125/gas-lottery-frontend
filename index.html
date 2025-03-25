@@ -295,7 +295,7 @@
 
 
 
-<!-- 預設 smallBox (收合), 位於右側偏上 -->
+<!-- 預設 smallBox (收合), 位於右側偏上
 <div id="winnerMarqueeContainer" class="smallBox">
   <div id="titleBar">最新中獎名單</div>
   <hr>
@@ -304,7 +304,7 @@
   </div>
 </div>
 
-
+ -->
 
 
 
@@ -409,13 +409,15 @@
 //================================輪播功能
   // 頁面載入後執行
 /** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
+/**
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
   initDragThreshold();  // ← 這裡改用 initDragThreshold()
   autoFitTitle(document.getElementById('titleBar'), 12);
   setInterval(() => fetchTodayWinners(), 5000);
 });
-
+*/
+  
 /** 收合/展開函式 */
 function toggleMarquee() {
   const container = document.getElementById('winnerMarqueeContainer');

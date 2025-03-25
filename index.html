@@ -385,7 +385,6 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
   ul.style.listStyle = 'none';
   ul.style.padding = '0';
@@ -393,44 +392,55 @@ function showFiveRecords(records) {
   marquee.appendChild(ul);
 
   records.forEach(r => {
-    // 每筆資料是一個 <li>
+    // 每筆資料各自一行
     const li = document.createElement('li');
-    li.style.marginBottom = '8px'; // 行距
+    // 行距設定稍微小一點
+    li.style.marginBottom = '4px'; 
 
-    // 在 li 裡放一個「捲動容器」span/div
-    // 使得整行不換行，但可水平捲動
-    // 也讓灰底能隨寬度 100% 撐開
+    // 單行容器：不換行、不出現捲軸
     const lineContainer = document.createElement('div');
-    // 設定寬度 100%，以便背景顯示整行
     lineContainer.style.width = '100%';
     lineContainer.style.boxSizing = 'border-box';
-
-    // 讓該容器可以水平捲動
     lineContainer.style.whiteSpace = 'nowrap';
-    lineContainer.style.overflowX = 'auto';
+    lineContainer.style.overflow = 'hidden';    // 隱藏超出
+    // 預設字體大小
+    lineContainer.style.fontSize = '16px';      
+    // 若想要背景色可以加：
+    // lineContainer.style.background = '#f0f0f0';  
 
-    // 背景、內距
-    lineContainer.style.background = '#eee';  
-    lineContainer.style.padding = '6px';
-
-    // 1) 時間 (ex: "03/25 14:43")
-    const timeStr = parseChineseTimeToMdHm(r.time);  
-    // 2) 電話號碼只顯示最後三碼 (ex: "223")
+    // 1) 時間
+    const timeStr = parseChineseTimeToMdHm(r.time);
+    // 2) 電話號碼(最後三碼)
     const phoneStr = formatPhoneLast3(r.phone);
     // 3) 中獎項
     const prizeStr = r.prize || '';
 
-    // 文字內容，如：
-    // 03/25 16:02   末三碼223   抽中：竹製王籠-中蜂
-    lineContainer.textContent = `${timeStr}　末三碼${phoneStr}　抽中：${prizeStr}`;
+    // 組合文字，如：03/25 16:02  末三碼223  抽中：竹製王籠-中蜂
+    // 可用空白或 &emsp; 來分隔
+    lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
 
-    // 加到 li
     li.appendChild(lineContainer);
-    // 加到 ul
     ul.appendChild(li);
+
+    // ★ 自動縮小文字直到不超出容器
+    autoFitText(lineContainer, 10); // 最小字體 10px
   });
 }
 
+
+/**
+ * 在元素文字超出寬度時，不斷縮小字體，直到 fits 或到達最小字體。
+ */
+function autoFitText(elem, minSize = 10) {
+  // 取得目前 font-size
+  let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
+
+  // while 文字寬度 > 容器寬度 && 還能繼續縮小
+  while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
+    fontSize--;
+    elem.style.fontSize = fontSize + 'px';
+  }
+}
 
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"

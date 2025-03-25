@@ -328,71 +328,86 @@
 //================================輪播功能
   // 頁面載入後執行
 window.addEventListener('DOMContentLoaded', () => {
-  fetchTodayWinners(); // 第一次載入就抓資料
+  fetchTodayWinners();
   makeDraggable(document.getElementById('winnerMarqueeContainer'));
-
-  // ★ 每 10 秒重新抓一次最新資料
-  setInterval(() => {
-    fetchTodayWinners();
-  }, 10_000);
 });
 
-// 取得「今日中獎名單 (活動截止日)」並啟動輪播
+// 1. 取得「今日中獎名單 (活動截止日)」資料
 async function fetchTodayWinners() {
   try {
     const res = await fetch(`${BASE_URL}/api/today-winners`);
-    const data = await res.json(); // data = [{time, phone, prize}, ...]
+    const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) {
-      // 若沒資料，直接顯示「尚無資料」
       document.getElementById('winnerMarquee').innerText = '尚無中獎資料';
       return;
     }
-    startMarquee(data);
+    showFiveRecords(data);
   } catch (err) {
     console.error(err);
     document.getElementById('winnerMarquee').innerText = '查詢失敗';
   }
 }
 
-// 讓 #winnerMarquee 做簡易輪播
-function startMarquee(records) {
-  // 建立每筆顯示行： 2025/03/25 14:20  0921xxx223  塑膠針式王籠
-  const lines = records.map(r => {
-    return `${r.time}　${r.phone}　${r.prize}`;
-  });
-
+// 2. 一次顯示 5 筆 (由舊到新，最新在最下面)
+function showFiveRecords(records) {
+  // 先清空容器
   const marquee = document.getElementById('winnerMarquee');
-  // 先清空
   marquee.innerHTML = '';
 
-  // 建立一個 ul + li
-  const ul = document.createElement('ul');
-  ul.style.margin = '0';
-  ul.style.padding = '0';
-  ul.style.listStyle = 'none';
-  marquee.appendChild(ul);
+  // 建立一個 table
+  const table = document.createElement('table');
 
-  lines.forEach(text => {
-    const li = document.createElement('li');
-    li.style.marginBottom = '8px';
-    li.innerText = text;
-    ul.appendChild(li);
+  // 建立 thead
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  ['中獎時間','電話號碼','中獎獎項'].forEach(txt => {
+    const th = document.createElement('th');
+    th.innerText = txt;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // 建立 tbody
+  const tbody = document.createElement('tbody');
+  table.appendChild(tbody);
+
+  // 逐筆插入 (假設後端已按照時間先後排序，最後一筆是最新)
+  records.forEach(r => {
+    const tr = document.createElement('tr');
+
+    const tdTime = document.createElement('td');
+    tdTime.innerText = r.time;
+    tr.appendChild(tdTime);
+
+    const tdPhone = document.createElement('td');
+    tdPhone.innerText = formatPhone(r.phone);  // ★ 這裡做電話號碼處理
+    tr.appendChild(tdPhone);
+
+    const tdPrize = document.createElement('td');
+    tdPrize.innerText = r.prize;
+    tr.appendChild(tdPrize);
+
+    tbody.appendChild(tr);
   });
 
-  // 簡易做「向上滾動」或「淡入淡出」都可以
-  // 以下示範「每3秒切換下一行」(若您只想一次顯示全部，就不用輪播)
-  if (lines.length > 1) {
-    let index = 0;
-    const liElements = ul.querySelectorAll('li');
-    liElements.forEach((li, i) => {
-      li.style.display = (i === 0) ? 'block' : 'none';
-    });
-    setInterval(() => {
-      liElements[index].style.display = 'none';
-      index = (index + 1) % lines.length;
-      liElements[index].style.display = 'block';
-    }, 3000);
+  marquee.appendChild(table);
+}
+
+// 3. formatPhone: 若只有 9 碼 → 補 0 → 10 碼；再把第 5~7 位替換成 'xxx'
+function formatPhone(raw) {
+  // 先去除非數字
+  let p = raw.replace(/\D/g, '');
+  // 如果只有 9 碼，前面補 0
+  if (p.length === 9) {
+    p = '0' + p;
   }
+  // 如果還不是 10 碼，就原樣回傳
+  if (p.length !== 10) {
+    return raw;
+  }
+  // 將第5~7位 (index 4..6) 替換成 'xxx'
+  return p.slice(0, 4) + 'xxx' + p.slice(7);
 }
 
 
@@ -410,21 +425,18 @@ function makeDraggable(element) {
     offsetY = e.offsetY;
     element.style.cursor = 'grabbing';
   });
-
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
     element.style.left = (e.pageX - offsetX) + 'px';
     element.style.top = (e.pageY - offsetY) + 'px';
   });
-
   document.addEventListener('mouseup', () => {
     isDown = false;
     element.style.cursor = 'move';
   });
 
-  // 觸控事件（手機/平板）
+  // 觸控事件
   element.addEventListener('touchstart', (e) => {
-    // 防止觸控時產生預設滾動
     e.preventDefault();
     isDown = true;
     const touch = e.touches[0];

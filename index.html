@@ -232,6 +232,13 @@
       z-index: 9999;
     }
 
+    #winnerMarqueeContainer ul {
+  height: 40px; /* 固定高度 */
+  line-height: 40px; /* 垂直置中文字 */
+  background: #fffaf0; /* 淡色背景 */
+}
+    
+
   table {
     border-collapse: collapse; /* 也可用 separate */
     width: 100%;
@@ -380,26 +387,32 @@ function showFiveRecords(records) {
 
   // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
+  // 讓 ul 水平排列、不換行
   ul.style.listStyle = 'none';
   ul.style.padding = '0';
+  ul.style.margin = '0';
+  ul.style.whiteSpace = 'nowrap';   // ★ 不自動換行
+  ul.style.overflowX = 'auto';      // ★ 內容超出時水平捲動
+
   marquee.appendChild(ul);
 
   records.forEach(r => {
     const li = document.createElement('li');
-    li.style.marginBottom = '8px';
+    // 讓 li 水平並排
+    li.style.display = 'inline-block';
+    // 每筆之間留點距離
+    li.style.marginRight = '20px';
 
-    // 1) 格式化時間 (ex: "03/25 14:43")
+    // 1) 時間
     const timeStr = parseChineseTimeToMdHm(r.time);
-
-    // 2) 電話號碼最後三碼 (ex: "223")
+    // 2) 電話號碼(最後三碼)
     const phoneStr = formatPhoneLast3(r.phone);
-
     // 3) 中獎項
     const prizeStr = r.prize || '';
 
-    // ★ 新的文字格式：
-    //   03/25 15:10    末三碼426    抽中：中蜂多功能王籠
-    //   利用 &emsp; 做分隔，並在電話號碼前加 "末三碼"、在獎項前加 "抽中："
+    // 您想顯示的文字
+    // 例如: 03/25 15:10  末三碼426  抽中：中蜂多功能王籠
+    // 為了更好可讀性，可用 &emsp; / &nbsp; 分隔
     li.innerHTML = `${timeStr}&emsp;末三碼${phoneStr}&emsp;抽中：${prizeStr}`;
 
     ul.appendChild(li);

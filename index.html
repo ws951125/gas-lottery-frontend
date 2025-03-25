@@ -385,6 +385,7 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
+  // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
   ul.style.listStyle = 'none';
   ul.style.padding = '0';
@@ -392,38 +393,48 @@ function showFiveRecords(records) {
   marquee.appendChild(ul);
 
   records.forEach(r => {
-    // 每筆資料各自一行
+    // 每筆資料對應一個 <li>
     const li = document.createElement('li');
-    // 行距設定稍微小一點
-    li.style.marginBottom = '4px'; 
+    // 行與行之間只留極小空白
+    li.style.margin = '1px 0'; 
+    li.style.padding = '0';
 
-    // 單行容器：不換行、不出現捲軸
+    // 建立一個行容器 (div)，讓灰色背景可覆蓋整行
     const lineContainer = document.createElement('div');
+    // 設定寬度 100%，box-sizing: border-box，確保背景能完整包住
+    lineContainer.style.display = 'block';
     lineContainer.style.width = '100%';
     lineContainer.style.boxSizing = 'border-box';
-    lineContainer.style.whiteSpace = 'nowrap';
-    lineContainer.style.overflow = 'hidden';    // 隱藏超出
-    // 預設字體大小
-    lineContainer.style.fontSize = '16px';      
-    // 若想要背景色可以加：
-    // lineContainer.style.background = '#f0f0f0';  
 
-    // 1) 時間
+    // 不換行 & 隱藏超出
+    lineContainer.style.whiteSpace = 'nowrap';
+    lineContainer.style.overflow = 'hidden';
+
+    // 灰色背景、內邊距
+    lineContainer.style.background = '#eee';
+    lineContainer.style.padding = '3px';
+
+    // 預設字體大小
+    lineContainer.style.fontSize = '16px';
+
+    // 1) 中獎時間 (轉成 MM/DD HH:mm)
     const timeStr = parseChineseTimeToMdHm(r.time);
-    // 2) 電話號碼(最後三碼)
+    // 2) 電話號碼只顯示最後三碼
     const phoneStr = formatPhoneLast3(r.phone);
     // 3) 中獎項
     const prizeStr = r.prize || '';
 
-    // 組合文字，如：03/25 16:02  末三碼223  抽中：竹製王籠-中蜂
-    // 可用空白或 &emsp; 來分隔
+    // 組合文字，例如：
+    // 03/25 16:02  末三碼223  抽中：竹製王籠-中蜂
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
 
+    // 放進 li
     li.appendChild(lineContainer);
+    // 放進 ul
     ul.appendChild(li);
 
-    // ★ 自動縮小文字直到不超出容器
-    autoFitText(lineContainer, 10); // 最小字體 10px
+    // ★ 自動縮小字體，直到容納得下或達到最小字體 10px
+    autoFitText(lineContainer, 10);
   });
 }
 
@@ -432,16 +443,12 @@ function showFiveRecords(records) {
  * 在元素文字超出寬度時，不斷縮小字體，直到 fits 或到達最小字體。
  */
 function autoFitText(elem, minSize = 10) {
-  // 取得目前 font-size
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
-
-  // while 文字寬度 > 容器寬度 && 還能繼續縮小
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
     fontSize--;
     elem.style.fontSize = fontSize + 'px';
   }
 }
-
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
 function parseChineseTimeToMdHm(str) {

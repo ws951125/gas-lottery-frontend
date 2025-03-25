@@ -158,6 +158,22 @@
     #drawBtn:hover {
       background-color: #d9534f;
     }
+
+    @keyframes scaleUp {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.4); /* 放大倍率可自行調整 */
+  }
+}
+
+.prize.scale-up {
+  animation: scaleUp 0.5s forwards;
+  /* forwards 代表動畫結束後保持最後的狀態(放大) */
+}
+
+    
     @keyframes fadeout {
       0% { opacity: 1; }
       100% { opacity: 1; display: none; }
@@ -433,7 +449,15 @@ function startDraw() {
   const overlay = document.getElementById('countdownOverlay');
   const countdown = document.getElementById('countdown');
   const startText = document.getElementById('startText');
-
+  
+  // 每次抽獎前，先把所有格子的 scale-up、highlight 移除
+  const elems = document.querySelectorAll('.prize');
+  elems.forEach(el => {
+    el.classList.remove('scale-up');
+    el.classList.remove('highlight');
+  });
+  
+  
   msg.innerText = '';
   countdown.innerText = '';
   overlay.style.display = 'none';
@@ -561,7 +585,8 @@ function beginAnimation(phone, msg, drawBtn) {
         elems[highlightIndex].classList.remove('highlight');
       }
       highlightIndex = selectedIndex;
-      elems[highlightIndex].classList.add('highlight');
+      const prizeEl = elems[highlightIndex];
+      prizeEl.classList.add('highlight', 'scale-up');
 
       // 2) 接著向後端「寫入抽獎紀錄」，讓後端判斷是否已抽過獎
       fetch(`${BASE_URL}/api/record-draw`, {

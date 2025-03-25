@@ -232,6 +232,18 @@
       z-index: 9999;
     }
 
+  table {
+    border-collapse: collapse; /* 也可用 separate */
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 12px 20px; /* 讓欄位更寬鬆 */
+    text-align: center;
+  }
+  th {
+    background: #f0f0f0;
+  }
 
     
   </style>
@@ -444,7 +456,7 @@ function formatPhoneLast3(phone) {
   // 只取末三碼
   const p = phone.replace(/\D/g, ''); // 去除非數字
   const last3 = p.slice(-3); // 末三碼
-  return `末三碼${last3}`;
+  return last3; // 直接回傳數字
 }
 
   //========================輪播功能

@@ -221,52 +221,55 @@
       background-color: #f1f1f1;
     }
 
-     /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
+    /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
     #winnerMarqueeContainer {
       position: fixed;
       top: 10px;
       left: 10px;
-      width: 350px;
-      background: #ffe0e0; /* 淡紅色 */
+      width: 350px;           /* 固定寬度 */
+      background: #ffe0e0;    /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      /* 不設 cursor: move，改在內部大部分區域可以拖曳 */
+      /* 不設 cursor: move，因為只在 dragArea 可拖曳 */
     }
 
-    /* 容器內的清單 */
-    #winnerMarqueeContainer ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    /* 每行行距極小 */
-    #winnerMarqueeContainer li {
-      margin: 1px 0; 
-      padding: 0;
-    }
-
-    /* 單行容器：不換行 + overflow hidden + 文字太長則 autoFit */
-.line-container {
-  white-space: nowrap;
-  overflow: hidden;
-  font-size: 16px;
-}
-
-    /* 紅色標題 */
+    /* 紅色標題，可點擊收合 */
     #titleBar {
       color: red;
       font-weight: bold;
       cursor: pointer; /* 提示可點擊收合 */
     }
 
-    /* 給容器大部分區域可拖曳 */
+    /* 收合區域(非標題)可被拖曳 */
     #dragArea {
-      /* 這是除標題外的區域 */
-      cursor: move; /* 滑鼠提示 */
+      cursor: move;
+      margin-top: 8px;
     }
 
+    /* 清單容器 */
+    #winnerMarqueeContainer ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* 行距極小 */
+    #winnerMarqueeContainer li {
+      margin: 1px 0; 
+      padding: 0;
+    }
+
+    /* 單行容器：不換行 + overflow hidden + 自動縮小 */
+    .line-container {
+      display: block;         /* block 以便正確計算寬度 */
+      width: 100%;            /* 占滿父容器 (350px) */
+      box-sizing: border-box; /* 避免padding或border影響計算 */
+      white-space: nowrap;    /* 不換行 */
+      overflow: hidden;       /* 超出隱藏 */
+      font-size: 16px;        /* 預設字體 */
+    }
     
   </style>
 </head>
@@ -281,10 +284,10 @@
 <!-- 浮動容器 -->
 
 <div id="winnerMarqueeContainer">
-  <!-- 1) 紅色標題 + 其下放 #dragArea 讓拖曳事件在此區域生效 -->
+  <!-- 標題列 (點擊收合/展開) -->
   <div id="titleBar">最新中獎名單</div>
-  <!-- 收合/展開的區域 -->
-  <div id="dragArea" style="margin-top: 8px;">
+  <!-- 收合/展開區域 -->
+  <div id="dragArea">
     <div id="winnerMarquee">尚無中獎資料</div>
   </div>
 </div>
@@ -385,15 +388,11 @@
 /** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
-  makeDraggable(document.getElementById('winnerMarqueeContainer'));
+  makeDraggable();
   setInterval(() => fetchTodayWinners(), 10000);
 
-
-  
-  // 點擊紅字標題 => 收合/展開
   const titleBar = document.getElementById('titleBar');
   titleBar.addEventListener('click', toggleMarquee);
-  // 為了讓手機也能點擊，不需要額外 touchend；click 在手機上也可觸發
 });
 
 /** 收合/展開函式 */
@@ -405,7 +404,6 @@ function toggleMarquee() {
     dragArea.style.display = 'none';
   }
 }
-
   
 
   
@@ -426,13 +424,14 @@ async function fetchTodayWinners() {
 }
 
 
+
   
 // 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)
 function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 若後端是舊->新 => reverse
+  // 後端若是舊->新 => reverse
   const reversed = [...records].reverse();
 
   const ul = document.createElement('ul');
@@ -441,14 +440,17 @@ function showFiveRecords(records) {
     const lineContainer = document.createElement('div');
     lineContainer.className = 'line-container';
 
+    // 格式化
     const timeStr = parseChineseTimeToMdHm(r.time);
     const phoneStr = formatPhoneLast3(r.phone);
     const prizeStr = r.prize || '';
+
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
 
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
+    // ★ 自動縮小
     autoFitText(lineContainer, 10);
   });
   marquee.appendChild(ul);
@@ -456,12 +458,15 @@ function showFiveRecords(records) {
 
 /** 自動縮小文字直到 fits 或達最小字體 */
 function autoFitText(elem, minSize = 10) {
+  // 強制一次 reflow
+  elem.style.display = 'block'; // 確保計算正確
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
+
+  // 若 scrollWidth > clientWidth，就縮字
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
     fontSize--;
     elem.style.fontSize = fontSize + 'px';
   }
-}
 
 
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"

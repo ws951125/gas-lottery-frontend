@@ -535,58 +535,79 @@ function startDraw() {
 }
 
   // 抽獎閃爍動畫 + 最終結果
-  function beginAnimation(phone, msg, drawBtn) {
-    const elems = getPrizeElements();
-    let current = 0;
-    const totalRounds = 20 + Math.floor(Math.random() * 10);
-    const interval = setInterval(() => {
-      if (highlightIndex >= 0) elems[highlightIndex].classList.remove('highlight');
-      highlightIndex = current % elems.length;
-      elems[highlightIndex].classList.add('highlight');
-      current++;
-      if (current > totalRounds) { 
-        clearInterval(interval);
-        const selectedPrize = weightedDraw();
-        const selectedIndex = prizes.findIndex(p => p.name === selectedPrize.name);
-        if (highlightIndex >= 0) elems[highlightIndex].classList.remove('highlight');
-        highlightIndex = selectedIndex;
-        const prizeEl = elems[highlightIndex];
-        prizeEl.classList.add('highlight');
+function beginAnimation(phone, msg, drawBtn) {
+  const elems = getPrizeElements();
+  let current = 0;
+  const totalRounds = 20 + Math.floor(Math.random() * 10);
 
-        // 顯示文字訊息（頁面下方）
-        msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
+  const interval = setInterval(() => {
+    // 先清除上一個 highlight
+    if (highlightIndex >= 0) {
+      elems[highlightIndex].classList.remove('highlight');
+    }
+    highlightIndex = current % elems.length;
+    elems[highlightIndex].classList.add('highlight');
 
-        // 顯示全頁動畫
-        const overlay = document.createElement('div');
-        overlay.className = 'prize-overlay';
-        overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
-        document.body.appendChild(overlay);
+    current++;
+    if (current > totalRounds) {
+      clearInterval(interval);
 
-        setTimeout(() => overlay.remove(), 5000);
+      // 1) 隨機抽出最終獎項
+      const selectedPrize = weightedDraw();
+      const selectedIndex = prizes.findIndex(p => p.name === selectedPrize.name);
 
-        // 寫入抽獎紀錄
-        fetch(`${BASE_URL}/api/record-draw`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, prize: selectedPrize.name })
-        })
-        .then(response => response.text())
-        .then(res => {
-          if (res !== 'OK') {
-            msg.innerText += '\n⚠️ 抽獎紀錄寫入失敗，請稍後再試';
-          }
-          drawing = false;
-          drawBtn.disabled = false;
-        })
-        .catch(err => {
-          console.error(err);
-          msg.innerText += '\n⚠️ 後端寫入失敗，請稍後再試';
-          drawing = false;
-          drawBtn.disabled = false;
-        });
+      // 清除最後的 highlight
+      if (highlightIndex >= 0) {
+        elems[highlightIndex].classList.remove('highlight');
       }
-    }, 100);
-  }
+      highlightIndex = selectedIndex;
+      elems[highlightIndex].classList.add('highlight');
+
+      // 2) 接著向後端「寫入抽獎紀錄」，讓後端判斷是否已抽過獎
+      fetch(`${BASE_URL}/api/record-draw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, prize: selectedPrize.name })
+      })
+      .then(response => response.text())
+      .then(res => {
+        if (res === 'OK') {
+          // (A) 寫入成功 → 顯示中獎動畫
+          msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
+
+          // 全畫面動畫
+          const overlay = document.createElement('div');
+          overlay.className = 'prize-overlay';
+          overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
+          document.body.appendChild(overlay);
+
+          setTimeout(() => overlay.remove(), 5000);
+
+        } else if (res.startsWith('\n您已抽過獎📛')) {
+          // (B) 後端回傳「已抽過獎」 → 不顯示中獎動畫，改顯示「已抽過獎」訊息
+          msg.innerText = res;
+
+        } else {
+          // (C) 其它錯誤
+          msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
+          msg.innerHTML += `\n⚠️ 抽獎紀錄寫入失敗，請稍後再試`;
+        }
+
+        // 收尾
+        drawing = false;
+        drawBtn.disabled = false;
+      })
+      .catch(err => {
+        console.error(err);
+        msg.innerHTML = `🎉 恭喜您抽中：<br><br><span class="prize-text">${selectedPrize.name}</span>`;
+        msg.innerHTML += `\n⚠️ 後端寫入失敗，請稍後再試`;
+        drawing = false;
+        drawBtn.disabled = false;
+      });
+    }
+  }, 100);
+}
+
 
   // 根據獎項的 rate 權重來抽
   function weightedDraw() {

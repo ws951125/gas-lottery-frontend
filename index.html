@@ -18,6 +18,7 @@
       margin: auto;
       position: relative;
     }
+    
     h1 {
       margin-bottom: 0;
     }
@@ -221,22 +222,20 @@
     }
 
     #winnerMarqueeContainer {
-      position: fixed; 
+      position: fixed;     /* ★固定視窗 */
       top: 10px;
       left: 10px;
-      width: 350px;
+      width: 350px;        /* 固定寬度 */
       background: #fff;
       border: 2px solid #ccc;
       padding: 10px;
-      cursor: move;
+      box-sizing: border-box;
       z-index: 9999;
+      cursor: move;        /* 提示可拖曳 */
     }
+    
 
-    #winnerMarqueeContainer ul {
-  height: 40px; /* 固定高度 */
-  line-height: 40px; /* 垂直置中文字 */
-  background: #fffaf0; /* 淡色背景 */
-}
+
     
 
   table {
@@ -257,21 +256,10 @@
 </head>
 <body>
 
-<!-- 浮動容器 -->
-<div id="winnerMarqueeContainer" style="
-  position: absolute; 
-  top: 10px; left: 10px;
-  width: 350px;            /* 固定寬度，作為邊框寬度 */
-  background: #fff;
-  border: 2px solid #ccc;
-  padding: 10px;
-  box-sizing: border-box;  /* 確保 padding 不會額外撐大 */
-  z-index: 9999;
-">
+<div id="winnerMarqueeContainer">
   <div style="font-weight: bold; margin-bottom: 8px;">最新中獎名單</div>
   <div id="winnerMarquee">尚無中獎資料</div>
 </div>
-
 
 
 
@@ -394,11 +382,9 @@ function showFiveRecords(records) {
   const marquee = document.getElementById('winnerMarquee');
   marquee.innerHTML = '';
 
-  // 先將最新紀錄顯示在最上方 => reverse()
-  // 若後端已是最新在前，就可不做這步
-  const reversed = [...records].reverse(); 
+  // 若後端是舊->新，則反轉
+  const reversed = [...records].reverse();
 
-  // 建立 <ul> 來放多筆紀錄
   const ul = document.createElement('ul');
   ul.style.listStyle = 'none';
   ul.style.padding = '0';
@@ -406,49 +392,35 @@ function showFiveRecords(records) {
   marquee.appendChild(ul);
 
   reversed.forEach(r => {
-    // 每筆資料對應一個 <li>
     const li = document.createElement('li');
-    // 行與行之間僅留極小間距
+    // 每行間距縮到最小 (行間 0 or 1px)
     li.style.margin = '1px 0';
     li.style.padding = '0';
 
     // 單行容器
     const lineContainer = document.createElement('div');
-    // 寬度 100% (相對於 #winnerMarqueeContainer 的內部寬度)
     lineContainer.style.width = '100%';
     lineContainer.style.boxSizing = 'border-box';
-
-    // 不換行 + 不顯示捲軸
     lineContainer.style.whiteSpace = 'nowrap';
     lineContainer.style.overflow = 'hidden';
+    lineContainer.style.fontSize = '16px'; // 預設字體
 
-    // 預設字體大小
-    lineContainer.style.fontSize = '16px';
-
-    // 時間 (ex: "03/25 16:02")
+    // 格式化：時間、電話末三碼、中獎項
     const timeStr = parseChineseTimeToMdHm(r.time);
-    // 電話號碼末三碼 (ex: "223")
     const phoneStr = formatPhoneLast3(r.phone);
-    // 中獎項
     const prizeStr = r.prize || '';
 
-    // 組合文字
-    // 例如: "03/25 16:02  末三碼223  抽中：竹製王籠-中蜂"
     lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
 
-    // 加入 li
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
-    // ★ 自動縮小字體直到能容納，或達到最小字體 10px
+    // 自動縮小字體直到不超出
     autoFitText(lineContainer, 10);
   });
 }
 
-/**
- * 在文字超出容器寬度時，持續縮小 font-size，
- * 直到 fits 或到達最小字體 (minSize)。
- */
+/** 自動縮小文字，避免超出容器寬度 */
 function autoFitText(elem, minSize = 10) {
   let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
   while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
@@ -503,42 +475,30 @@ function formatPhoneLast3(phone) {
 
   
   //========================輪播功能可移動  
+/** 拖曳 (position: fixed) - 避免亂跳 */
 function makeDraggable(element) {
   let isDown = false;
-  let offsetX = 0, offsetY = 0;
+  let offsetX = 0;
+  let offsetY = 0;
 
-  // 取得目前是 absolute 還是 fixed
-  const computedPos = window.getComputedStyle(element).position;
-
-  // 滑鼠事件
   element.addEventListener('mousedown', (e) => {
     e.preventDefault();
     isDown = true;
     element.style.cursor = 'grabbing';
 
-    // 用 getBoundingClientRect() 算出容器與視窗的相對位置
     const rect = element.getBoundingClientRect();
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
   });
 
-document.addEventListener('mousemove', (e) => {
-  if (!isDown) return;
-
-  if (computedPos === 'absolute') {
-    // 針對 position: absolute，需要扣掉 window.scrollX / scrollY
-    const x = e.pageX - offsetX - window.scrollX;
-    const y = e.pageY - offsetY - window.scrollY;
-    element.style.left = x + 'px';
-    element.style.top = y + 'px';
-  } else {
-    // position: fixed 的情況下，clientX/clientY 即可
+  document.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    // position: fixed => clientX/clientY
     const x = e.clientX - offsetX;
     const y = e.clientY - offsetY;
     element.style.left = x + 'px';
     element.style.top = y + 'px';
-  }
-});
+  });
 
   document.addEventListener('mouseup', () => {
     isDown = false;
@@ -561,20 +521,10 @@ document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
     e.preventDefault();
     const touch = e.touches[0];
-
-    if (computedPos === 'absolute') {
-      // absolute => pageX
-      const x = touch.pageX - offsetX;
-      const y = touch.pageY - offsetY;
-      element.style.left = x + 'px';
-      element.style.top = y + 'px';
-    } else {
-      // fixed => clientX
-      const x = touch.clientX - offsetX;
-      const y = touch.clientY - offsetY;
-      element.style.left = x + 'px';
-      element.style.top = y + 'px';
-    }
+    const x = touch.clientX - offsetX;
+    const y = touch.clientY - offsetY;
+    element.style.left = x + 'px';
+    element.style.top = y + 'px';
   }, { passive: false });
 
   document.addEventListener('touchend', () => {

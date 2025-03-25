@@ -1,16 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <link rel="icon" href="https://scontent.fkhh1-2.fna.fbcdn.net/v/t39.30808-6/480279338_9608885309130654_2709051418076201297_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=yZX49YCvBvwQ7kNvgGdUJi3&_nc_oc=AdlzuXCwlUFO63d3IgGcSGsvydKIM4tRNmFmq3mC6DWxgPfAwnEAjHE4YsYmpkBdc39BGq53WBOg8Ga40vKCp1rv&_nc_zt=23&_nc_ht=scontent.fkhh1-2.fna&_nc_gid=ZCi8r-Id6JvoJ4bmHOPgow&oh=00_AYEk4hrDxIkvij1tEZqJC-pXyx4QLT0sXkdoa5WUnUie3Q&oe=67E75F9E" type="image/jpg" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title></title>  
+  <title></title>
   <style>
-    
-    html, body {
-      margin: 0; 
-      padding: 0;
-    }
     body {
       font-family: sans-serif;
       padding: 20px;
@@ -18,7 +12,6 @@
       margin: auto;
       position: relative;
     }
-    
     h1 {
       margin-bottom: 0;
     }
@@ -40,20 +33,14 @@
       margin-bottom: 20px;
     }
     .prize {
-      padding: 5px;
+      padding: 10px;
       text-align: center;
-      background-color: #f0f0f0; /* 比 #f0f0f0 更深一點的灰 */
+      background-color: #f0f0f0;
       border-radius: 6px;
-      border: 1px solid #ccc; /* 邊框顏色也可再深一點，如 #666 */
       transition: background-color 0.3s;
     }
     .highlight {
-      background-color: #ff4d4d !important; /* 亮紅色背景 */
-      font-size: 20px;                      /* 字體加大 (可依需求調整) */
-      font-weight: bold;                    /* 粗體 */
-      color: white;                         /* 文字顏色為白色 */
-      transition: background-color 0.3s;
-
+      background-color: #ffe066 !important;
     }
     .controls {
       display: none;
@@ -79,7 +66,7 @@
       font-size: 20px;
     }
     .message .prize-text {
-      font-size: clamp(1rem, 10vw, 40px);
+      font-size: 40px;
       display: block;
       margin-top: 20px;
     }
@@ -109,7 +96,7 @@
       animation: pop 0.4s ease-in-out;
     }
     .start-text {
-      font-size: clamp(1rem, 10vw, 360px);
+      font-size: 360px;
       color: #fff;
       font-weight: bold;
       margin-top: 20px;
@@ -134,7 +121,7 @@
       justify-content: center;
       align-items: center;
       color: #fff;
-      font-size: clamp(1rem, 10vw, 48px);
+      font-size: 48px;
       font-weight: bold;
       text-align: center;
       white-space: pre-wrap;
@@ -184,7 +171,7 @@
     }
     .prize-text {
       animation: prizePop 0.8s ease-in-out;
-      font-size: clamp(1rem, 10vw, 12pr0px);
+      font-size: 120px;
     }
     @keyframes prizePop {
       0% { transform: scale(0.2); opacity: 0; }
@@ -220,119 +207,24 @@
     #result tr:hover {
       background-color: #f1f1f1;
     }
-
-    /* 浮動容器 - 預設為小尺寸 (smallBox) */
-    /* 容器: 預設小尺寸 (smallBox) */
-    #winnerMarqueeContainer {
-      position: fixed;
-      z-index: 9999;
-      box-sizing: border-box;
-      background: #ffe0e0; /* 淡紅色 */
-      border: 2px solid #ccc;
-      padding: 10px;
-      /* 避免拖曳時「top,left」被動畫化 => 只做寬/高的過渡 */
-      transition: width 0.3s ease, height 0.3s ease;
-    }
-
-    /* 小尺寸: 右側偏上, width:120px, 隱藏內容區 */
-    .smallBox {
-      top: 20%;
-      right: 10px;
-      width: 120px;
-    }
-    /* 小尺寸時, marqueeContent 隱藏 */
-    .smallBox #marqueeContent {
-      display: none;
-    }
-
-    /* 展開尺寸: 右側(可調整top:10% or 10px) + 寬350px + 顯示內容 */
-    .expandedBox {
-      top: 10%;
-      right: 10px;
-      width: 350px;
-    }
-    /* 展開時, 顯示內容 */
-    .expandedBox #marqueeContent {
-      display: block;
-    }
-
-    /* 紅色標題 */
-  #titleBar {
-    display: inline-block;  /* 能正確計算 clientWidth */
-    white-space: nowrap;    /* 不換行 */
-    overflow: hidden;       /* 超出隱藏，避免跑到第二行 */
-    font-size: 16px;        /* 預設大字體 */
-    color: red;
-    font-weight: bold;
-    user-select: none;
-    cursor: pointer;
-  }
-    
-    /* 內容清單 */
-    #marqueeContent ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    #marqueeContent li {
-      margin: 1px 0;
-      padding: 0;
-    }
-
-    /* 不換行 + 自動縮小 => autoFitText */
-    .line-container {
-      white-space: nowrap;
-      overflow: hidden;
-      font-size: 14px; /* 預設字體 */
-    }
-    
   </style>
 </head>
-
-
-  
 <body>
 
-
-
-<!-- 預設 smallBox (收合), 位於右側偏上
-<div id="winnerMarqueeContainer" class="smallBox">
-  <div id="titleBar">最新中獎名單</div>
-  <hr>
-  <div id="marqueeContent">
-    <div id="winnerMarquee">尚無中獎資料</div>
-  </div>
-</div>
-
- -->
-
-
-
-
-
-
-
-  
 <div id="drawSection">
   <h1 id="mainTitle">載入中...</h1>
-  <hr>
   <div>　</div>
   <div id="deadlineDisplay" style="font-weight: bold;">活動到期日載入中...</div>
   <div id="countdownTimer">剩下 -- 分 -- 秒</div>
   <div>　</div>
   <div style="color: blue; font-size: 20px;">📩本期抽獎獎項📩<br></div>
-  <hr>
   <div>　</div>
   <div class="grid" id="prizeContainer"></div>
   <div>　</div>
-<!-- 
+
   <div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
   <div style="color: blue;">👉 獎項將於您下一次購買的包裹中一併寄出。<br><br></div>
--->
-
-  <div id="activityDescription" style="color: blue; font-size: 16px;"></div>
-<br>
-  <div style="color: red;font-size: 16px;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
+  <div style="color: red;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
   <br><br>
 
   <div class="controls" id="controls">
@@ -351,14 +243,9 @@
   <button id="drawBtn" onclick="showQuery()">查詢中獎紀錄</button>
 </div>
 
-<!--
-  <audio id="startSound" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
-  <audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
--->
-  
-<audio id="startSound" src="/sounds/start.wav" preload="auto"></audio>
-<audio id="winSound" src="/sounds/start.wav" preload="auto"></audio>
-  
+<audio id="startSound" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
+<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+
 <div id="querySection" style="display: none;">
   <h2>查詢中獎紀錄</h2>
   <input type="text" id="queryPhone" placeholder="請輸入手機號碼">
@@ -371,12 +258,7 @@
   <button id="drawBtn" onclick="showDraw()">返回抽獎</button>
 </div>
 
-
-
-  
 <script>
-
-  
   // 後端 API 網址 (Web Service)
   const BASE_URL = 'https://gas-lottery.onrender.com'; // <=== 這裡請改為您自己的後端服務網址
 
@@ -390,250 +272,8 @@
     fetchTitle();
     fetchDeadline();
     fetchPrizes();
-    fetchDescription(); // ← 新增
   };
 
-
-
-  function autoFitTitle(elem, minSize = 12) {
-  let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
-  while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
-    fontSize--;
-    elem.style.fontSize = fontSize + 'px';
-  }
-}
-
-  
-
-
-//================================輪播功能
-  // 頁面載入後執行
-/** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
-/**
-document.addEventListener('DOMContentLoaded', () => {
-  fetchTodayWinners();
-  initDragThreshold();  // ← 這裡改用 initDragThreshold()
-  autoFitTitle(document.getElementById('titleBar'), 12);
-  setInterval(() => fetchTodayWinners(), 5000);
-});
-*/
-  
-/** 收合/展開函式 */
-function toggleMarquee() {
-  const container = document.getElementById('winnerMarqueeContainer');
-  // 清除使用者拖曳後的 left/top => 回到 class-based 位置
-  container.style.left = '';
-  container.style.top = '';
-
-  if (container.classList.contains('smallBox')) {
-    // 從小 -> 展開
-    container.classList.remove('smallBox');
-    container.classList.add('expandedBox');
-  } else {
-    // 從大 -> 回到小
-    container.classList.remove('expandedBox');
-    container.classList.add('smallBox');
-  }
-}
-  
-// 1. 取得「最新 5 筆中獎紀錄」後顯示
-async function fetchTodayWinners() {
-  try {
-    const res = await fetch(`${BASE_URL}/api/today-winners`);
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) {
-      document.getElementById('winnerMarquee').innerText = '尚無中獎資料';
-      return;
-    }
-    showFiveRecords(data);
-  } catch (err) {
-    console.error(err);
-    document.getElementById('winnerMarquee').innerText = '查詢失敗';
-  }
-}
-
-  
-// 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)
-function showFiveRecords(records) {
-  const marquee = document.getElementById('winnerMarquee');
-  marquee.innerHTML = '';
-
-  // 後端若是舊->新 => reverse
-  const reversed = [...records].reverse();
-
-  const ul = document.createElement('ul');
-  reversed.forEach(r => {
-    const li = document.createElement('li');
-    const lineContainer = document.createElement('div');
-    lineContainer.className = 'line-container';
-
-    const timeStr = parseChineseTimeToMdHm(r.time);
-    const phoneStr = formatPhoneLast3(r.phone);
-    const prizeStr = r.prize || '';
-
-    lineContainer.textContent = `${timeStr}  末三碼${phoneStr}  抽中：${prizeStr}`;
-    li.appendChild(lineContainer);
-    ul.appendChild(li);
-
-    // 自動縮小到 minSize=8
-    autoFitText(lineContainer, 8);
-  });
-  marquee.appendChild(ul);
-}
-
-/** 自動縮小文字直到 fits 或達最小字體 */
-function autoFitText(elem, minSize = 8) {
-  let fontSize = parseInt(window.getComputedStyle(elem).fontSize, 10);
-  while (elem.scrollWidth > elem.clientWidth && fontSize > minSize) {
-    fontSize--;
-    elem.style.fontSize = fontSize + 'px';
-  }
-}
-
-// 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
-function parseChineseTimeToMdHm(str) {
-  const re = /^(\d{4})\/(\d{1,2})\/(\d{1,2})\s*(上午|下午)\s*(\d{1,2})\:(\d{1,2})(?:\:(\d{1,2}))?/;
-  const match = str.trim().match(re);
-  if (!match) return str;
-
-  let [_, year, m, d, ampm, hh, mm] = match;
-  m = parseInt(m, 10);
-  d = parseInt(d, 10);
-  hh = parseInt(hh, 10);
-  mm = parseInt(mm, 10);
-
-  if (ampm === '下午' && hh < 12) {
-    hh += 12;
-  }
-  const MM = (m < 10) ? '0' + m : m;
-  const DD = (d < 10) ? '0' + d : d;
-  const HH = (hh < 10) ? '0' + hh : hh;
-  const Min = (mm < 10) ? '0' + mm : mm;
-  return `${MM}/${DD} ${HH}:${Min}`;
-}
-
-
-
-// 4. 電話號碼 => "末三碼###"
-function formatPhoneLast3(phone) {
-  const p = phone.replace(/\D/g, '');
-  return p.slice(-3);
-}
-
-
-  //========================輪播功能
-
-
-
-  
-  //========================輪播功能可移動  
-/** 拖曳 (position: fixed) - 避免亂跳 */
-/** 同時支援「點擊標題收合」與「整個容器可拖曳」(含標題) 
- *  利用「拖曳門檻 threshold」判斷點擊 or 拖曳
- */
-/** 拖曳門檻: 分辨點擊 or 拖曳 */
-function initDragThreshold() {
-  const container = document.getElementById('winnerMarqueeContainer');
-  let isDown = false;
-  let startX = 0, startY = 0;
-  let offsetX = 0, offsetY = 0;
-  let hasMoved = false;
-  const DRAG_THRESHOLD = 5;
-
-  container.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    isDown = true;
-    hasMoved = false;
-    container.style.opacity = '0.5';
-
-    const rect = container.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-    startX = e.clientX;
-    startY = e.clientY;
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
-    const distX = e.clientX - startX;
-    const distY = e.clientY - startY;
-    if (Math.abs(distX) > DRAG_THRESHOLD || Math.abs(distY) > DRAG_THRESHOLD) {
-      hasMoved = true;
-    }
-    if (hasMoved) {
-      // 立即更新 left/top, 無 transition
-      container.style.left = (e.clientX - offsetX) + 'px';
-      container.style.top = (e.clientY - offsetY) + 'px';
-    }
-  });
-
-  document.addEventListener('mouseup', (e) => {
-    if (!isDown) return;
-    isDown = false;
-    container.style.opacity = '1';
-
-    // 若未超過門檻 => 視為點擊
-    if (!hasMoved) {
-      if (e.target.id === 'titleBar') {
-        toggleMarquee();
-      }
-    }
-  });
-
-  // 觸控
-  container.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    isDown = true;
-    hasMoved = false;
-    container.style.opacity = '0.5';
-
-    const rect = container.getBoundingClientRect();
-    const touch = e.touches[0];
-    offsetX = touch.clientX - rect.left;
-    offsetY = touch.clientY - rect.top;
-    startX = touch.clientX;
-    startY = touch.clientY;
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const distX = touch.clientX - startX;
-    const distY = touch.clientY - startY;
-    if (Math.abs(distX) > DRAG_THRESHOLD || Math.abs(distY) > DRAG_THRESHOLD) {
-      hasMoved = true;
-    }
-    if (hasMoved) {
-      container.style.left = (touch.clientX - offsetX) + 'px';
-      container.style.top = (touch.clientY - offsetY) + 'px';
-    }
-  }, { passive: false });
-
-  document.addEventListener('touchend', (e) => {
-    if (!isDown) return;
-    isDown = false;
-    container.style.opacity = '1';
-
-    if (!hasMoved) {
-      if (e.target.id === 'titleBar') {
-        toggleMarquee();
-      }
-    }
-  });
-}
-
-
-//========================輪播功能可移動  
-
-
-
-
-
-
-
-
-  
   // 切換到「查詢紀錄」畫面
   function showQuery() {
     document.getElementById('drawSection').style.display = 'none';
@@ -769,113 +409,78 @@ function initDragThreshold() {
   }
 
   // 開始抽獎
-function startDraw() {
-  const phone = document.getElementById('phone').value.trim();
-  const msg = document.getElementById('message');
-  const drawBtn = document.getElementById('drawBtn');
-  const overlay = document.getElementById('countdownOverlay');
-  const countdown = document.getElementById('countdown');
-  const startText = document.getElementById('startText');
+  function startDraw() {
+    const phone = document.getElementById('phone').value.trim();
+    const msg = document.getElementById('message');
+    const drawBtn = document.getElementById('drawBtn');
+    const overlay = document.getElementById('countdownOverlay');
+    const countdown = document.getElementById('countdown');
+    const startText = document.getElementById('startText');
 
-  msg.innerText = '';
-  countdown.innerText = '';
-  overlay.style.display = 'none';
-  startText.style.display = 'none';
+    msg.innerText = '';
+    countdown.innerText = '';
+    overlay.style.display = 'none';
+    startText.style.display = 'none';
 
-  // 手機格式檢查
-  if (!/^09\d{8}$/.test(phone)) {
-    msg.innerText = '請輸入正確的手機號碼';
-    return;
-  }
 
-  // 避免重複點擊
-  if (drawing) return;
-  drawing = true;
-  drawBtn.disabled = true;
+if (!/^09\d{8}$/.test(phone)) {
+  msg.innerText = '請輸入正確的手機號碼';
+  return;
+}
 
-  // ★ 先重新抓取截止日來檢查
-  fetch(`${BASE_URL}/api/deadline`)
-    .then(response => response.text())
-    .then(deadlineString => {
-      if (!deadlineString) {
-        // 若連截止日都拿不到，顯示訊息後中斷
-        msg.innerText = '活動已截止，目前無法抽獎';
+    if (drawing) return;
+    drawing = true;
+    drawBtn.disabled = true;
+
+    // 播放起始音效
+    document.getElementById('startSound').play().catch(() => {});
+
+    // 檢查是否已在「截止日」這天抽過
+    fetch(`${BASE_URL}/api/check-draw-on-deadline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.exists) {
+        // 已抽過獎
+        msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
         drawBtn.disabled = false;
         drawing = false;
-        return;
+      } else {
+        // 未抽過 -> 顯示 3 秒倒數
+        let count = 3;
+        countdown.innerText = count;
+        overlay.style.display = 'flex';
+
+        const countdownInterval = setInterval(() => {
+          count--;
+          if (count === 0) {
+            clearInterval(countdownInterval);
+            countdown.innerText = '';
+            startText.style.display = 'block';
+            setTimeout(() => {
+              overlay.style.display = 'none';
+              startText.style.display = 'none';
+              beginAnimation(phone, msg, drawBtn);
+            }, 1000);
+          } else {
+            countdown.innerText = count;
+            countdown.style.animation = 'none';
+            void countdown.offsetWidth; // 觸發重繪
+            countdown.style.animation = 'pop 0.4s';
+          }
+        }, 1000);
       }
-      // 將活動截止日 + 23:59:59
-      const deadlineDate = new Date(deadlineString + ' 23:59:59');
-      const now = new Date();
-      if (now > deadlineDate) {
-        // ★ 若已超過截止日，顯示提示並結束
-        msg.innerText = '活動已截止，目前無法抽獎';
-        drawBtn.disabled = false;
-        drawing = false;
-        return;
-      }
-
-      // 若尚未截止 → 繼續原本抽獎流程
-
-      // 播放音效
-      document.getElementById('startSound').play().catch(() => {});
-
-      // 檢查是否已在截止日同一天抽過
-      fetch(`${BASE_URL}/api/check-draw-on-deadline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.exists) {
-          // 已抽過獎
-          msg.innerText = `\n您已抽過獎📛\n\n您在📅 ${data.time}\n\n抽中🎁 ${data.prize}`;
-          drawBtn.disabled = false;
-          drawing = false;
-        } else {
-          // 未抽過 -> 顯示 3 秒倒數
-          let count = 3;
-          countdown.innerText = count;
-          overlay.style.display = 'flex';
-
-          const countdownInterval = setInterval(() => {
-            count--;
-            if (count === 0) {
-              clearInterval(countdownInterval);
-              countdown.innerText = '';
-              startText.style.display = 'block';
-              setTimeout(() => {
-                overlay.style.display = 'none';
-                startText.style.display = 'none';
-                beginAnimation(phone, msg, drawBtn);
-                document.getElementById('winSound').pause();
-                document.getElementById('winSound').play().catch(() => {});
-              }, 1000);
-            } else {
-              countdown.innerText = count;
-              countdown.style.animation = 'none';
-              void countdown.offsetWidth; // 觸發重繪
-              countdown.style.animation = 'pop 0.4s';
-            }
-          }, 1000);
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        msg.innerText = '後端檢查失敗，請稍後再試';
-        drawBtn.disabled = false;
-        drawing = false;
-      });
     })
     .catch(err => {
       console.error(err);
-      // 若抓截止日失敗，也視為結束
-      msg.innerText = '活動已截止，目前無法抽獎';
+      msg.innerText = '後端檢查失敗，請稍後再試';
       drawBtn.disabled = false;
       drawing = false;
     });
-}
+  }
 
   // 抽獎閃爍動畫 + 最終結果
   function beginAnimation(phone, msg, drawBtn) {
@@ -904,7 +509,7 @@ function startDraw() {
         overlay.className = 'prize-overlay';
         overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
         document.body.appendChild(overlay);
-
+        document.getElementById('winSound').play().catch(() => {});
         setTimeout(() => overlay.remove(), 5000);
 
         // 寫入抽獎紀錄
@@ -941,18 +546,6 @@ function startDraw() {
     }
     return prizes[prizes.length - 1];
   }
-
-  function fetchDescription() {
-  fetch(`${BASE_URL}/api/activity-description`)
-    .then(response => response.text())
-    .then(desc => {
-      // 把拿到的文字直接塞進 #activityDescription
-      document.getElementById('activityDescription').innerHTML = desc;
-    })
-    .catch(() => {
-      document.getElementById('activityDescription').innerText = '(無法取得活動說明)';
-    });
-}
 </script>
 
 </body>

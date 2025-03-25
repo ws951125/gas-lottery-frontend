@@ -34,14 +34,20 @@
       margin-bottom: 20px;
     }
     .prize {
-      padding: 10px;
+      padding: 5px;
       text-align: center;
-      background-color: #f0f0f0;
+      background-color: #f0f0f0; /* 比 #f0f0f0 更深一點的灰 */
       border-radius: 6px;
+      border: 1px solid #ccc; /* 邊框顏色也可再深一點，如 #666 */
       transition: background-color 0.3s;
     }
     .highlight {
-      background-color: #ffe066 !important;
+      background-color: #ff4d4d !important; /* 亮紅色背景 */
+      font-size: 20px;                      /* 字體加大 (可依需求調整) */
+      font-weight: bold;                    /* 粗體 */
+      color: white;                         /* 文字顏色為白色 */
+      transition: background-color 0.3s;
+
     }
     .controls {
       display: none;
@@ -222,10 +228,14 @@
   <div>　</div>
   <div class="grid" id="prizeContainer"></div>
   <div>　</div>
-
+<!-- 
   <div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
   <div style="color: blue;">👉 獎項將於您下一次購買的包裹中一併寄出。<br><br></div>
-  <div style="color: red;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
+-->
+
+  <div id="activityDescription" style="color: blue; font-size: 16px;"></div>
+<br>
+  <div style="color: red;font-size: 16px;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
   <br><br>
 
   <div class="controls" id="controls">
@@ -278,6 +288,7 @@
     fetchTitle();
     fetchDeadline();
     fetchPrizes();
+    fetchDescription(); // ← 新增
   };
 
   // 切換到「查詢紀錄」畫面
@@ -495,6 +506,8 @@ function startDraw() {
                 overlay.style.display = 'none';
                 startText.style.display = 'none';
                 beginAnimation(phone, msg, drawBtn);
+                document.getElementById('winSound').pause();
+                document.getElementById('winSound').play().catch(() => {});
               }, 1000);
             } else {
               countdown.innerText = count;
@@ -548,7 +561,7 @@ function startDraw() {
         overlay.className = 'prize-overlay';
         overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
         document.body.appendChild(overlay);
-        document.getElementById('winSound').play().catch(() => {});
+
         setTimeout(() => overlay.remove(), 5000);
 
         // 寫入抽獎紀錄
@@ -585,6 +598,18 @@ function startDraw() {
     }
     return prizes[prizes.length - 1];
   }
+
+  function fetchDescription() {
+  fetch(`${BASE_URL}/api/activity-description`)
+    .then(response => response.text())
+    .then(desc => {
+      // 把拿到的文字直接塞進 #activityDescription
+      document.getElementById('activityDescription').innerHTML = desc;
+    })
+    .catch(() => {
+      document.getElementById('activityDescription').innerText = '(無法取得活動說明)';
+    });
+}
 </script>
 
 </body>

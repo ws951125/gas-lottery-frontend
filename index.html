@@ -416,42 +416,53 @@ function formatPhone(raw) {
   //========================輪播功能可移動  
 function makeDraggable(element) {
   let isDown = false;
-  let offsetX, offsetY;
+  let offsetX = 0;
+  let offsetY = 0;
 
-  // 滑鼠事件
+  // ========== 滑鼠事件 ==========
   element.addEventListener('mousedown', (e) => {
+    e.preventDefault();
     isDown = true;
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
     element.style.cursor = 'grabbing';
+
+    // 取得元素在視窗中的位置
+    const rect = element.getBoundingClientRect();
+    // 用 e.clientX - rect.left 來計算「滑鼠點擊位置」相對於元素左上角的距離
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
   });
+
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    element.style.left = (e.pageX - offsetX) + 'px';
-    element.style.top = (e.pageY - offsetY) + 'px';
+    // 新的 left/top = 滑鼠所在位置 - 當初記錄的偏移量
+    element.style.left = (e.clientX - offsetX) + 'px';
+    element.style.top = (e.clientY - offsetY) + 'px';
   });
+
   document.addEventListener('mouseup', () => {
     isDown = false;
     element.style.cursor = 'move';
   });
 
-  // 觸控事件
+  // ========== 觸控事件 (手機/平板) ==========
   element.addEventListener('touchstart', (e) => {
     e.preventDefault();
     isDown = true;
+    element.style.cursor = 'grabbing';
+
     const touch = e.touches[0];
     const rect = element.getBoundingClientRect();
     offsetX = touch.clientX - rect.left;
     offsetY = touch.clientY - rect.top;
-    element.style.cursor = 'grabbing';
   }, { passive: false });
 
   document.addEventListener('touchmove', (e) => {
     if (!isDown) return;
     e.preventDefault();
+
     const touch = e.touches[0];
-    element.style.left = (touch.pageX - offsetX) + 'px';
-    element.style.top = (touch.pageY - offsetY) + 'px';
+    element.style.left = (touch.clientX - offsetX) + 'px';
+    element.style.top = (touch.clientY - offsetY) + 'px';
   }, { passive: false });
 
   document.addEventListener('touchend', () => {

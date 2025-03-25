@@ -33,14 +33,56 @@
       gap: 10px;
       margin-bottom: 20px;
     }
-    .prize {
-      padding: 5px;
-      text-align: center;
-      background-color: #f0f0f0; /* 比 #f0f0f0 更深一點的灰 */
-      border-radius: 6px;
-      border: 1px solid #ccc; /* 邊框顏色也可再深一點，如 #666 */
-      transition: background-color 0.3s;
-    }
+    
+.prize {
+  /* 這裡示範一個 2:1 的比例，可自行調整 */
+  aspect-ratio: 2 / 1;
+
+  /* 若想讓容器寬度隨網格自動分配，可不設定寬度，
+     也可加上 min-width / max-width 做更多限制 */
+  width: 100%;
+
+  /* 其他外觀 */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f0f0f0;
+  overflow: hidden;       /* 以防 scale 超出邊界 */
+  position: relative;     /* 讓內層絕對定位也可行 */
+  transition: background-color 0.3s;
+  display: flex;          /* 方便置中 */
+  align-items: center;
+  justify-content: center;
+}
+
+    /* 內層：顯示文字，預設不放大 */
+.prize-content {
+  transform: scale(1);
+  transition: transform 0.3s;
+  /* 若要文字水平溢出不換行，可加 white-space: nowrap; */
+}
+
+/* 一般高亮時 (隨機閃爍) */
+.prize.highlight {
+  background-color: #ff4d4d; /* 紅色 */
+  color: #fff;
+  transform: scale(1.1);    /* 稍微放大，可依需求調整 */
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+/* 最終定格時，想再大一點 */
+.prize.final-scale {
+  background-color: #ff4d4d; /* 可以跟 highlight 相同或不同 */
+  color: #fff;
+  transform: scale(1.4);    /* 放大倍率可自行調整 */
+  transition: transform 0.5s; /* 放大可再慢一些 */
+}
+
+.prize.highlight .prize-content {
+  transform: scale(1.3);  /* 放大倍數可自行調整 */
+}
+
+    
+    
     .highlight {
       background-color: #ff4d4d !important; /* 亮紅色背景 */
       font-size: 20px;                      /* 字體加大 (可依需求調整) */
@@ -230,19 +272,26 @@
     #result tr:hover {
       background-color: #f1f1f1;
     }
+
+    .prize.final-scale .prize-content {
+  transform: scale(1.4);
+}
+
+    
   </style>
 </head>
 <body>
 
 <div id="drawSection">
   <h1 id="mainTitle">載入中...</h1>
+  <hr>
   <div>　</div>
   <div id="deadlineDisplay" style="font-weight: bold;">活動到期日載入中...</div>
   <div id="countdownTimer">剩下 -- 分 -- 秒</div>
   <div>　</div>
   <div style="color: blue; font-size: 20px;">📩本期抽獎獎項📩<br></div>
   <div>　</div>
-  <div class="grid" id="prizeContainer"></div>
+  <div class="prize-content">獎項名稱</div>
   <div>　</div>
 <!-- 
   <div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
@@ -607,6 +656,11 @@ function beginAnimation(phone, msg, drawBtn) {
           document.body.appendChild(overlay);
 
           setTimeout(() => overlay.remove(), 5000);
+
+
+          // ★ 關鍵：移除 highlight，改用 final-scale
+          prizeEl.classList.remove('highlight');
+          prizeEl.classList.add('final-scale');
 
         } else if (res.startsWith('\n您已抽過獎📛')) {
           // (B) 後端回傳「已抽過獎」 → 不顯示中獎動畫，改顯示「已抽過獎」訊息

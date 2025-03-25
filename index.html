@@ -507,6 +507,7 @@ function startDraw() {
                 overlay.style.display = 'none';
                 startText.style.display = 'none';
                 beginAnimation(phone, msg, drawBtn);
+                document.getElementById('winSound').play().catch(() => {});
               }, 1000);
             } else {
               countdown.innerText = count;
@@ -560,7 +561,7 @@ function startDraw() {
         overlay.className = 'prize-overlay';
         overlay.innerHTML = `🎉 恭喜您抽中：\n\n<span class="prize-text">\n\n${selectedPrize.name}</span>`;
         document.body.appendChild(overlay);
-        document.getElementById('winSound').play().catch(() => {});
+
         setTimeout(() => overlay.remove(), 5000);
 
         // 寫入抽獎紀錄

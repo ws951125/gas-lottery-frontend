@@ -221,7 +221,7 @@
     }
 
     #winnerMarqueeContainer {
-      position: absolute; /* ★ 或改成 fixed，看下文 (B) */
+      position: fixed; 
       top: 10px;
       left: 10px;
       width: 350px;
@@ -337,6 +337,11 @@
 window.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
   makeDraggable(document.getElementById('winnerMarqueeContainer'));
+
+  // ★ 每 10 秒重新抓一次最新資料
+  setInterval(() => {
+    fetchTodayWinners();
+  }, 10000); // 10000毫秒 = 10秒
 });
 
 // 1. 取得「最新 5 筆中獎紀錄」後顯示
@@ -467,23 +472,23 @@ function makeDraggable(element) {
     offsetY = e.clientY - rect.top;
   });
 
-  document.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
+document.addEventListener('mousemove', (e) => {
+  if (!isDown) return;
 
-    if (computedPos === 'absolute') {
-      // ★ absolute: top/left 以文件為基準 => pageX - window.scrollX
-      const x = e.pageX - offsetX;
-      const y = e.pageY - offsetY;
-      element.style.left = x + 'px';
-      element.style.top = y + 'px';
-    } else {
-      // ★ fixed: top/left 以視窗為基準 => clientX
-      const x = e.clientX - offsetX;
-      const y = e.clientY - offsetY;
-      element.style.left = x + 'px';
-      element.style.top = y + 'px';
-    }
-  });
+  if (computedPos === 'absolute') {
+    // 針對 position: absolute，需要扣掉 window.scrollX / scrollY
+    const x = e.pageX - offsetX - window.scrollX;
+    const y = e.pageY - offsetY - window.scrollY;
+    element.style.left = x + 'px';
+    element.style.top = y + 'px';
+  } else {
+    // position: fixed 的情況下，clientX/clientY 即可
+    const x = e.clientX - offsetX;
+    const y = e.clientY - offsetY;
+    element.style.left = x + 'px';
+    element.style.top = y + 'px';
+  }
+});
 
   document.addEventListener('mouseup', () => {
     isDown = false;

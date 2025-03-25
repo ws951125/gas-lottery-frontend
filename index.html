@@ -224,15 +224,34 @@
     /* 浮動容器 (固定) - 淡紅色背景 + 灰色邊框 */
     #winnerMarqueeContainer {
       position: fixed;
-      top: 10px;
-      right: 10px;           /* 改為右上角 */
-      width: 350px;          /* 固定寬度 */
-      background: #ffe0e0;   /* 淡紅色 */
+      z-index: 9999;
+      box-sizing: border-box;
+      background: #ffe0e0; /* 淡紅色 */
       border: 2px solid #ccc;
       padding: 10px;
-      box-sizing: border-box;
-      z-index: 9999;
-      /* 以程式區分「點擊」或「拖曳」 */
+      /* 預設為小尺寸 => smallBox */
+    }
+    /* 動畫/過渡 (選擇性) */
+    #winnerMarqueeContainer {
+      transition: all 0.3s ease;
+    }
+
+    /* 小尺寸 (預設) */
+    .smallBox {
+      /* 右側偏中上位置 (您可自行微調) */
+      top: 30%;
+      right: 10px;
+      width: 120px;
+      height: auto;
+    }
+
+    /* 展開尺寸 */
+    .expandedBox {
+      /* 攤開到右上大區塊 (可自行微調) */
+      top: 10px;
+      right: 10px;
+      width: 350px;
+      height: auto; /* 或可寫 60%/80%... */
     }
 
     /* 紅色標題 */
@@ -240,16 +259,20 @@
       color: red;
       font-weight: bold;
       user-select: none; /* 避免拖曳時選中文字 */
+      cursor: pointer;   /* 提示可點擊 */
     }
 
-    /* 容器內的清單 */
+    /* 內容區 */
+    #marqueeContent {
+      margin-top: 8px;
+    }
+
+    /* 內容清單 */
     #winnerMarqueeContainer ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-
-    /* 行距極小 */
     #winnerMarqueeContainer li {
       margin: 1px 0; 
       padding: 0;
@@ -276,14 +299,12 @@
 
 
 <!-- 浮動容器 -->
-<div id="winnerMarqueeContainer">
+<div id="winnerMarqueeContainer" class="smallBox">
   <div id="titleBar">最新中獎名單</div>
-  <!-- 預設「收合」：display: none -->
-  <div id="marqueeContent" style="display: none;">
+  <div id="marqueeContent">
     <div id="winnerMarquee">尚無中獎資料</div>
   </div>
 </div>
-
 
 
 
@@ -382,19 +403,23 @@
 document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
   initDragAndClick();
-  setInterval(() => fetchTodayWinners(), 5000);
+  setInterval(() => fetchTodayWinners(), 10000);
 });
 
-/** 收合/展開函式 */
+
+/** 收合/展開函式：切換 smallBox / expandedBox */
 function toggleMarquee() {
-  const content = document.getElementById('marqueeContent');
-  if (content.style.display === 'none') {
-    content.style.display = '';
+  const container = document.getElementById('winnerMarqueeContainer');
+  if (container.classList.contains('smallBox')) {
+    // 若目前是 smallBox → 切換到 expandedBox
+    container.classList.remove('smallBox');
+    container.classList.add('expandedBox');
   } else {
-    content.style.display = 'none';
+    // 反之 → 回到 smallBox
+    container.classList.remove('expandedBox');
+    container.classList.add('smallBox');
   }
 }
-
   
 // 1. 取得「最新 5 筆中獎紀錄」後顯示
 async function fetchTodayWinners() {
@@ -411,7 +436,6 @@ async function fetchTodayWinners() {
     document.getElementById('winnerMarquee').innerText = '查詢失敗';
   }
 }
-
 
   
 // 2. 一次顯示 5 筆 (由舊到新, 最新在最下面)

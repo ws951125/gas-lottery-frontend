@@ -221,17 +221,50 @@
       background-color: #f1f1f1;
     }
 
+    /* 浮動容器：背景改淡紅色 (#ffe0e0)，並固定在視窗左上角 */
     #winnerMarqueeContainer {
-      position: fixed;     /* ★固定視窗 */
+      position: fixed;
       top: 10px;
       left: 10px;
-      width: 350px;        /* 固定寬度 */
-      background: #fff;
+      width: 350px;
+      background: #ffe0e0; /* 淡紅色背景 */
       border: 2px solid #ccc;
       padding: 10px;
       box-sizing: border-box;
       z-index: 9999;
-      cursor: move;        /* 提示可拖曳 */
+      cursor: move;
+    }
+
+    /* 讓清單自動增高，不限定高度 */
+    #winnerMarqueeContainer ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* 每行 (li) 行距很小 */
+    #winnerMarqueeContainer li {
+      margin: 1px 0;
+      padding: 0;
+    }
+
+    /* 單行容器：不換行、隱藏超出，自動縮字 */
+    .line-container {
+      width: 100%;
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 16px; /* 預設字體 */
+    }
+
+    /* 按鈕樣式，可依需求調整 */
+    #toggleBtn {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
     }
     
 
@@ -254,10 +287,22 @@
     
   </style>
 </head>
+
+
+  
 <body>
 
+
+
+  
+<!-- 浮動容器（淡紅色背景 + 紅色標題 + 右上角按鈕） -->
 <div id="winnerMarqueeContainer">
-  <div style="font-weight: bold; margin-bottom: 8px;">最新中獎名單</div>
+  <!-- 標題列：左邊紅字標題、右邊收合按鈕 -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+    <span style="color: red; font-weight: bold;">最新中獎名單</span>
+    <button id="toggleBtn">收合</button>
+  </div>
+  <!-- 放中獎紀錄的容器 -->
   <div id="winnerMarquee">尚無中獎資料</div>
 </div>
 
@@ -351,16 +396,30 @@
 
 //================================輪播功能
   // 頁面載入後執行
-window.addEventListener('DOMContentLoaded', () => {
+/** DOMContentLoaded：抓最新紀錄、啟用拖曳、10秒自動更新 */
+document.addEventListener('DOMContentLoaded', () => {
   fetchTodayWinners();
   makeDraggable(document.getElementById('winnerMarqueeContainer'));
+  setInterval(() => fetchTodayWinners(), 10000);
 
-  // ★ 每 10 秒重新抓一次最新資料
-  setInterval(() => {
-    fetchTodayWinners();
-  }, 10000); // 10000毫秒 = 10秒
+  // 收合/展開 按鈕點擊事件
+  const toggleBtn = document.getElementById('toggleBtn');
+  toggleBtn.addEventListener('click', () => {
+    const marquee = document.getElementById('winnerMarquee');
+    if (marquee.style.display === 'none') {
+      // 若目前是隱藏 → 展開
+      marquee.style.display = '';
+      toggleBtn.innerText = '收合';
+    } else {
+      // 若目前是顯示 → 收合
+      marquee.style.display = 'none';
+      toggleBtn.innerText = '展開';
+    }
+  });
 });
 
+
+  
 // 1. 取得「最新 5 筆中獎紀錄」後顯示
 async function fetchTodayWinners() {
   try {
@@ -386,26 +445,14 @@ function showFiveRecords(records) {
   const reversed = [...records].reverse();
 
   const ul = document.createElement('ul');
-  ul.style.listStyle = 'none';
-  ul.style.padding = '0';
-  ul.style.margin = '0';
-  marquee.appendChild(ul);
 
   reversed.forEach(r => {
     const li = document.createElement('li');
-    // 每行間距縮到最小 (行間 0 or 1px)
-    li.style.margin = '1px 0';
-    li.style.padding = '0';
-
     // 單行容器
     const lineContainer = document.createElement('div');
-    lineContainer.style.width = '100%';
-    lineContainer.style.boxSizing = 'border-box';
-    lineContainer.style.whiteSpace = 'nowrap';
-    lineContainer.style.overflow = 'hidden';
-    lineContainer.style.fontSize = '16px'; // 預設字體
+    lineContainer.className = 'line-container';
 
-    // 格式化：時間、電話末三碼、中獎項
+    // 解析時間 / 電話末三碼 / 中獎項
     const timeStr = parseChineseTimeToMdHm(r.time);
     const phoneStr = formatPhoneLast3(r.phone);
     const prizeStr = r.prize || '';
@@ -415,9 +462,11 @@ function showFiveRecords(records) {
     li.appendChild(lineContainer);
     ul.appendChild(li);
 
-    // 自動縮小字體直到不超出
+    // 自動縮小字體
     autoFitText(lineContainer, 10);
   });
+
+  marquee.appendChild(ul);
 }
 
 /** 自動縮小文字，避免超出容器寬度 */
@@ -429,31 +478,21 @@ function autoFitText(elem, minSize = 10) {
   }
 }
 
-
 // 3. 解析 "2025/3/25 下午 2:43:22" => "03/25 14:43"
 function parseChineseTimeToMdHm(str) {
-  // 先用正則取出 "YYYY/M/D 上午/下午 H:MM:SS"
-  // 範例：2025/3/25 下午 2:43:22
-  // group1=2025, group2=3, group3=25, group4=下午, group5=2, group6=43, group7=22
   const re = /^(\d{4})\/(\d{1,2})\/(\d{1,2})\s*(上午|下午)\s*(\d{1,2})\:(\d{1,2})(?:\:(\d{1,2}))?/;
   const match = str.trim().match(re);
-  if (!match) {
-    // 若不符合，就直接回傳原字串
-    return str;
-  }
-  let [_, year, m, d, ampm, hh, mm, ss] = match;
-  // 轉成 number
+  if (!match) return str;
+
+  let [_, year, m, d, ampm, hh, mm] = match;
   m = parseInt(m, 10);
   d = parseInt(d, 10);
   hh = parseInt(hh, 10);
   mm = parseInt(mm, 10);
 
-  // 如果是 '下午' 且 hh < 12 => hh += 12
-  // (若是下午 12 點則不加，根據實際需求)
   if (ampm === '下午' && hh < 12) {
     hh += 12;
   }
-  // 格式化成 MM/DD HH:mm
   const MM = (m < 10) ? '0' + m : m;
   const DD = (d < 10) ? '0' + d : d;
   const HH = (hh < 10) ? '0' + hh : hh;
@@ -463,11 +502,10 @@ function parseChineseTimeToMdHm(str) {
 
 // 4. 電話號碼 => "末三碼###"
 function formatPhoneLast3(phone) {
-  // 只取末三碼
-  const p = phone.replace(/\D/g, ''); // 去除非數字
-  const last3 = p.slice(-3); // 末三碼
-  return last3; // 直接回傳數字
+  const p = phone.replace(/\D/g, '');
+  return p.slice(-3);
 }
+
 
   //========================輪播功能
 
@@ -478,8 +516,7 @@ function formatPhoneLast3(phone) {
 /** 拖曳 (position: fixed) - 避免亂跳 */
 function makeDraggable(element) {
   let isDown = false;
-  let offsetX = 0;
-  let offsetY = 0;
+  let offsetX = 0, offsetY = 0;
 
   element.addEventListener('mousedown', (e) => {
     e.preventDefault();
@@ -493,7 +530,7 @@ function makeDraggable(element) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDown) return;
-    // position: fixed => clientX/clientY
+    // fixed => clientX/clientY
     const x = e.clientX - offsetX;
     const y = e.clientY - offsetY;
     element.style.left = x + 'px';
@@ -505,7 +542,7 @@ function makeDraggable(element) {
     element.style.cursor = 'move';
   });
 
-  // 觸控事件 (手機/平板)
+  // 觸控 (手機/平板)
   element.addEventListener('touchstart', (e) => {
     e.preventDefault();
     isDown = true;

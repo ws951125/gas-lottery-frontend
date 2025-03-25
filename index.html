@@ -34,6 +34,7 @@
       margin-bottom: 20px;
     }
     
+    
 .prize {
   /* 這裡示範一個 2:1 的比例，可自行調整 */
   aspect-ratio: 2 / 1;
@@ -277,6 +278,13 @@
   transform: scale(1.4);
 }
 
+.prize.highlight,
+.prize.final-scale,
+.prize.scale-up {
+  position: relative;
+  z-index: 9999;
+}
+    
     
   </style>
 </head>
@@ -502,8 +510,7 @@ function startDraw() {
   // 每次抽獎前，先把所有格子的 scale-up、highlight 移除
   const elems = document.querySelectorAll('.prize');
   elems.forEach(el => {
-    el.classList.remove('scale-up');
-    el.classList.remove('highlight');
+    el.classList.remove('scale-up', 'highlight', 'final-scale');
   });
   
   

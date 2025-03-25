@@ -309,6 +309,29 @@ input::placeholder {
   color: #FFB5B5;  /* 您想要的顏色 */
   /* 也可以加上 font-style, font-size, 等 */
 }
+
+
+  /* 點擊標題的樣式 */
+.rule-title {
+  font-weight: bold;
+  color: blue;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+/* 收合內容的容器，預設顯示 */
+.rule-content {
+  transition: all 0.3s; /* 動畫時間 */
+  overflow: hidden;     /* 需要 hidden 讓高度變化更平滑 */
+}
+
+/* .hide 時，將高度設為 0 並透明度設為 0 */
+.rule-content.hide {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
     
   </style>
 </head>
@@ -342,11 +365,19 @@ input::placeholder {
   <div style="color: blue;">👉 中獎項目，兌獎期限為6天，逾期無效喔！<br>👉 可查詢歷史中獎紀錄(下方按鈕)。<br></div>
   <div style="color: blue;">👉 獎項將於您下一次購買的包裹中一併寄出。<br><br></div>
 -->
+  
+<!-- 收合的按鈕 -->
+  <div class="rule-title" onclick="toggleRule()">
+  規則說明
+</div>
 
+<!-- 收合 -->
+<div id="ruleContent" class="rule-content hide" style="color: red; font-size: 16px;">
   <div id="activityDescription" style="color: blue; font-size: 16px;"></div>
 <br>
   <div style="color: red;font-size: 16px;">⛔ 請勿使用非本人號碼進行抽獎！<br>⛔ 經查證非本人號碼則中獎無效！</div>
   <br><br>
+</div>
 
   <div class="controls" id="controls">
     <input type="text" id="phone" placeholder="點這裡輸入手機號碼才能抽獎" />

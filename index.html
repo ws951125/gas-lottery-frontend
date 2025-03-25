@@ -47,8 +47,7 @@
       font-weight: bold;                    /* 粗體 */
       color: white;                         /* 文字顏色為白色 */
       transition: background-color 0.3s;
-      transform: scale(1.2);
-      transition: transform 0.3s, background-color 0.3s;
+
     }
     .controls {
       display: none;
@@ -507,7 +506,7 @@ function startDraw() {
                 overlay.style.display = 'none';
                 startText.style.display = 'none';
                 beginAnimation(phone, msg, drawBtn);
-                document.getElementById('winSound').pause().catch(() => {});
+                document.getElementById('winSound').pause();
                 document.getElementById('winSound').play().catch(() => {});
               }, 1000);
             } else {

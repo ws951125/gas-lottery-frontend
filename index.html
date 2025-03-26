@@ -481,7 +481,9 @@ input::placeholder {
     `;
     data.forEach(item => {
       // 若無兌獎日期 => 顯示「未兌獎」
-      const claimedText = item.claimed ? item.claimed : '未兌獎';
+      const claimedText = item.claimed
+        ? `${item.claimed} ✔️`
+        : '未兌獎';
 
       // 將四行資訊拼在同一欄位
       const infoHtml = `

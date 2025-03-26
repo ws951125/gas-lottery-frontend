@@ -472,24 +472,29 @@ input::placeholder {
       resultDiv.innerHTML = '查無中獎紀錄';
       return;
     }
+     // 表格只有一欄 → 「抽獎資訊」
     let html = `
       <table>
         <tr>
           <th>抽獎資訊</th>
-          <th>兌獎日期</th>
         </tr>
     `;
     data.forEach(item => {
+      // 若無兌獎日期 => 顯示「未兌獎」
       const claimedText = item.claimed ? item.claimed : '未兌獎';
+
+      // 將四行資訊拼在同一欄位
       const infoHtml = `
-        ●抽獎日期：${item.time}<br>
-        ●中獎獎項：${item.prize}<br>
-        ●有效日期：${item.expire}
+        📆抽獎日期：${item.time}<br>
+        🎁中獎獎項：${item.prize}<br>
+        🔴兌獎期限：${item.expire}<br>
+        📅兌獎日期：${claimedText}
       `;
+
+      // 每筆紀錄用一個 <tr>，只有一個 <td>
       html += `
         <tr>
-           <td style="text-align: left;">${infoHtml}</td>
-          <td>${claimedText}</td>
+          <td style="text-align: left;">${infoHtml}</td>
         </tr>
       `;
     });

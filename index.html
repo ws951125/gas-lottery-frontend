@@ -456,33 +456,89 @@ input::placeholder {
   }
 
   // 查詢中獎紀錄
-  function search() {
-    const phone = document.getElementById('queryPhone').value.trim();
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = '查詢中...';
+function search() {
+  const phone = document.getElementById('queryPhone').value.trim();
+  const resultDiv = document.getElementById('result');
+  resultDiv.innerHTML = '查詢中...';
 
-    fetch(`${BASE_URL}/api/query-history`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (!data || data.length === 0) {
-        resultDiv.innerHTML = '查無中獎紀錄';
-        return;
-      }
-      let html = '<table><tr><th>抽獎時間</th><th>中獎獎項</th><th>到期日</th><th>兌獎日期</th></tr>';
-      data.forEach(item => {
-        html += `<tr>
-                  <td>${item.time}</td>
-                  <td>${item.prize}</td>
-                  <td>${item.expire}</td>
-                  <td>${item.claimed}</td>
-                </tr>`;
-      });
-      html += '</table>';
-      resultDiv.innerHTML = html;
+  fetch(`${BASE_URL}/api/query-history`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (!data || data.length === 0) {
+      resultDiv.innerHTML = '查無中獎紀錄';
+      return;
+    }
+    let html = `
+      <table>
+        <tr>
+          <th>抽獎資訊</th>
+          <th>兌獎日期</th>
+        </tr>
+    `;
+    data.forEach(item => {
+      const claimedText = item.claimed ? item.claimed : '未兌獎';
+      const infoHtml = `
+        ●抽獎日期：${item.time}<br>
+        ●中獎獎項：${item.prize}<br>
+        ●有效日期：${item.expire}
+      `;
+      html += `
+        <tr>
+          <td>${infoHtml}</td>
+          <td>${claimedText}</td>
+        </tr>
+      `;
+    });
+    html += '</table>';
+    resultDiv.innerHTML = html;
+  })
+  .catch(err => {
+    console.error(err);
+    resultDiv.innerHTML = '查詢失敗，請稍後再試';
+  });
+}
+
+  
+
+      
+let html = `
+  <table>
+    <tr>
+      <th>抽獎資訊</th>
+      <th>兌獎日期</th>
+    </tr>
+`;
+data.forEach(item => {
+  // 若無兌獎日期 => 顯示「未兌獎」
+  const claimedText = item.claimed ? item.claimed : '未兌獎';
+
+  // 第一欄要把三行資訊組合起來
+  // ●抽獎日期：${item.time}
+  // ●中獎獎項：${item.prize}
+  // ●有效日期：${item.expire}
+  const infoHtml = `
+    ●抽獎日期：${item.time}<br>
+    ●中獎獎項：${item.prize}<br>
+    ●有效日期：${item.expire}
+  `;
+
+  html += `
+    <tr>
+      <td>${infoHtml}</td>
+      <td>${claimedText}</td>
+    </tr>
+  `;
+});
+html += '</table>';
+resultDiv.innerHTML = html;
+
+
+
+      
     })
     .catch(err => {
       console.error(err);
